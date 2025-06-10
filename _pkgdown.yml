@@ -1,0 +1,9 @@
+url: https://boehringer-ingelheim.github.io/dv.swimmerplot/
+
+template:
+  bootstrap: 5
+
+navbar:
+  right:
+    - icon: fa-github
+      href: https://github.com/boehringer-ingelheim/dv.swimmerplot

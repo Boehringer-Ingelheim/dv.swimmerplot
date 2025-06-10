@@ -1,0 +1,45 @@
+Package: dv.swimmerplot
+Title: DaVinci Swimmer Plot Module
+Version: 1.1.0
+Authors@R: c(
+      person(given = "Ming",
+             family = "Yang",
+             role = c("aut", "cre"),
+             email = "ming.yang.ext@boehringer-ingelheim.com"),       
+      person(given = "Sorin",
+             family = "Voicu",
+             role = "aut",
+             email = "sorin.voicu.ext@boehringer-ingelheim.com"),
+      person(given = "Yash Ankurbhai",
+             family = "Shah",
+             role = "aut",
+             email = "yash_ankurbhai.shah@boehringer-ingelheim.com"),
+      person(given = "Korbinian",
+             family = "Matthias",
+             role = "aut",
+             email = "korbinian.matthias@boehringer-ingelheim.com")
+      )
+Description: A DaVinci module that displays swimmer plot for visualizing subject-level treatment exposures and outcomes over time in clinical trials.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports:
+    checkmate,
+    dplyr,
+    ggforce,
+    ggiraph,
+    ggplot2,
+    rlang,
+    shiny
+Suggests:
+    dv.manager,
+    jsonlite,
+    knitr,
+    pharmaversesdtm,
+    rmarkdown,
+    shinytest2,
+    testthat,
+    vdiffr,
+    xml2
+VignetteBuilder: knitr
+RoxygenNote: 7.3.2
