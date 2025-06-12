@@ -41,5 +41,6 @@ Suggests:
     testthat,
     vdiffr,
     xml2
+Remotes: boehringer-ingelheim/dv.manager@main
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
