@@ -71,7 +71,8 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
         shiny::tags$div(
           style = "margin-bottom: 10px; color: #0072B2; font-style: italic;",
           shiny::icon("info-circle"), 
-          "Click on a subject, treatment duration bar, or response point to view detailed information in the linked module."
+          "Click on a subject, treatment duration bar, 
+          or response point to view detailed information in the linked module."
         )
       )
     )
@@ -256,7 +257,8 @@ swimmerplot_server <- function(
 #'   \item Clinical outcomes or responses are shown as points along the timeline (optional)
 #'   \item Subjects can be grouped by categorical variables
 #'   \item Interactive tooltips provide additional information on hover
-#'   \item Optional linking to other modules (e.g., Patient Profile) when clicking on subjects, treatment duration bars, or response points
+#'   \item Optional linking to other modules (e.g., Patient Profile) when clicking on subjects, 
+#' treatment duration bars, or response points
 #' }
 #'
 #' @param module_id `[character(1)]` Unique ID for the module.
