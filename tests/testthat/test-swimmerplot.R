@@ -275,7 +275,7 @@ test_that(
     "Unit: " = "UNIT"
   )
   
-  result <- generate_tooltip(test_data, tooltip_vector)
+  result <- dv.swimmerplot:::generate_tooltip(test_data, tooltip_vector)
   
   expected <- c(
     "Parameter: Weight<br>Value: 80<br>Unit: kg",
@@ -284,13 +284,13 @@ test_that(
   
   expect_equal(result, expected)
   
-  empty_result <- generate_tooltip(test_data, c())
+  empty_result <- dv.swimmerplot:::generate_tooltip(test_data, c())
   expect_equal(empty_result, c("", ""))
   
-  null_result <- generate_tooltip(test_data, NULL)
+  null_result <- dv.swimmerplot:::generate_tooltip(test_data, NULL)
   expect_equal(null_result, c("", ""))
   
-  unnamed_result <- generate_tooltip(test_data, c("PARAM", "VALUE"))
+  unnamed_result <- dv.swimmerplot:::generate_tooltip(test_data, c("PARAM", "VALUE"))
   expect_equal(unnamed_result, c("", ""))
   
   tooltip_with_missing <- c(
@@ -299,7 +299,7 @@ test_that(
     "Missing: " = "NONEXISTENT" 
   )
   
-  result_with_missing <- generate_tooltip(test_data, tooltip_with_missing)
+  result_with_missing <- dv.swimmerplot:::generate_tooltip(test_data, tooltip_with_missing)
   
   expected_with_missing <- c(
     "Parameter: Weight<br>Value: 80",
