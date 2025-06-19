@@ -55,6 +55,8 @@
 <text transform='translate(13.05,330.81) rotate(-90)' text-anchor='middle' style='font-size: 11.00px; font-family: sans;' textLength='36.70px' lengthAdjust='spacingAndGlyphs'>Subject</text>
 <text x='312.68' y='56.02' style='font-size: 11.00px; font-family: sans;' textLength='46.48px' lengthAdjust='spacingAndGlyphs'>Exposure</text>
 <line x1='366.37' y1='52.24' x2='380.20' y2='52.24' style='stroke-width: 4.27; stroke: #F8766D; stroke-linecap: butt;' />
+<line x1='366.37' y1='52.24' x2='380.20' y2='52.24' style='stroke-width: 2.13; stroke: #F8766D; stroke-linecap: butt;' />
+<polyline points='380.05,52.32 380.20,52.24 380.05,52.15 ' style='stroke-width: 2.13; stroke: #F8766D; stroke-linecap: butt;' />
 <line x1='422.01' y1='52.24' x2='435.83' y2='52.24' style='stroke-width: 4.27; stroke: #00BFC4; stroke-linecap: butt;' />
 <line x1='422.01' y1='52.24' x2='435.83' y2='52.24' style='stroke-width: 2.13; stroke: #00BFC4; stroke-linecap: butt;' />
 <polyline points='435.68,52.32 435.83,52.24 435.68,52.15 ' style='stroke-width: 2.13; stroke: #00BFC4; stroke-linecap: butt;' />
