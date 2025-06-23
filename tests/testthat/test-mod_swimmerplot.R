@@ -85,11 +85,7 @@ test_that(
 
 test_that(
   "Exposure data can be colored according to custom color palettes and response data points can use custom shapes" |> 
-    vdoc[["add_spec"]](c(
-    specs$visualization$color_palette,
-    specs$visualization$shape_mapping,
-    specs$plot$grouping
-  )), 
+    vdoc[["add_spec"]](specs$visualization$combined_customization), 
   {
   mod <- mod_swimmerplot(
     module_id = "test_id",

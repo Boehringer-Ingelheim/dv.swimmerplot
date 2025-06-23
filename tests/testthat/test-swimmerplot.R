@@ -64,7 +64,7 @@ test_that(
 
 test_that(
   "Swimmerplot function returns a ggplot object when interactive_plot=FALSE" |> vdoc[["add_spec"]](
-    specs$plot$basic_functionality
+    specs$plot$non_interactive
   ),
   {
   df1 <- data.frame(
@@ -190,7 +190,7 @@ test_that(
 
 test_that(
   "Swimmerplot with grouping returns a ggplot object when interactive_plot=FALSE" |> vdoc[["add_spec"]](
-    specs$plot$grouping
+    specs$plot$grouped_non_interactive
   ),
   {
   df1 <- data.frame(

@@ -1,6 +1,6 @@
 test_that(
   "Swimmerplot function displays subject-level data over time with interactive features" |> vdoc[["add_spec"]](
-    specs$plot$basic_functionality
+    specs$apps$mock_swimmerplot
   ), 
   {  
   app_dir <- testthat::test_path("apps/mock_swimmerplot")
