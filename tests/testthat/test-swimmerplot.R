@@ -1,10 +1,7 @@
 test_that(
-  "Swimmerplot function displays subject-level data over time" |> vdoc[["add_spec"]](c(
-    specs$plot$basic_functionality,
-    specs$plot$sorting,
-    specs$plot$legend,
-    specs$visualization$ongoing_treatment
-  )), 
+  "Swimmerplot function displays subject-level data over time" |> vdoc[["add_spec"]](
+    specs$plot$comprehensive_functionality
+  ), 
   {
   df1 <- data.frame(
     USUBJID = c("SUBJ-001", "SUBJ-002"),
@@ -256,10 +253,9 @@ test_that(
 })
 
 test_that(
-  "Tooltips support named list format with labels and values" |> vdoc[["add_spec"]](c(
-    specs$interactivity$tooltip_format,
-    specs$interactivity$tooltips
-  )), 
+  "Tooltips support named list format with labels and values" |> vdoc[["add_spec"]](
+    specs$interactivity$comprehensive_tooltips
+  ), 
   {
   test_data <- data.frame(
     SUBJID = c("S001", "S002"),
