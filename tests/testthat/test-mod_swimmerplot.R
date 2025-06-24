@@ -1,5 +1,5 @@
 test_that(
-  "Module validates all input parameters" |> vdoc[["add_spec"]](specs$common$input_validation), 
+  "mod_swimmerplot() creates valid module structure" |> vdoc[["add_spec"]](specs$module_structure), 
   {
   mod <- mod_swimmerplot(
     module_id = "test_id",
@@ -24,8 +24,8 @@ test_that(
 })
 
 test_that(
-  "Plot appearance can be customized with titles, labels, and dimensions" |> 
-    vdoc[["add_spec"]](specs$plot$customization), 
+  "mod_swimmerplot() UI supports customization and jumping controls" |> 
+    vdoc[["add_spec"]](specs$ui_customization), 
   {
   mod <- mod_swimmerplot(
     module_id = "test_id",
@@ -84,8 +84,8 @@ test_that(
 })
 
 test_that(
-  "Exposure data can be colored according to custom color palettes and response data points can use custom shapes" |> 
-    vdoc[["add_spec"]](specs$visualization$combined_customization), 
+  "mod_swimmerplot() supports custom colors and shapes" |> 
+    vdoc[["add_spec"]](specs$color_shape_customization), 
   {
   mod <- mod_swimmerplot(
     module_id = "test_id",
@@ -110,7 +110,7 @@ test_that(
 })
 
 test_that(
-  "Module is compatible with the DaVinci framework" |> vdoc[["add_spec"]](specs$integration$davinci_compatibility), 
+  "mod_swimmerplot() integrates with DaVinci framework" |> vdoc[["add_spec"]](specs$davinci_integration), 
   {
   mod <- mod_swimmerplot(
     module_id = "test_id",
@@ -160,7 +160,7 @@ test_that(
 })
 
 test_that(
-  "Module validates all input parameters" |> vdoc[["add_spec"]](specs$common$input_validation), 
+  "mod_swimmerplot() validates inputs and handles errors" |> vdoc[["add_spec"]](specs$module_structure), 
   {
   expect_silent(
     mod_swimmerplot(
@@ -219,8 +219,8 @@ test_that(
 })
 
 test_that(
-  "Plot supports optional subject jumping feature when enabled" |> 
-    vdoc[["add_spec"]](specs$interactivity$jumping_feature), 
+  "mod_swimmerplot() UI adapts based on jumping configuration" |> 
+    vdoc[["add_spec"]](specs$jumping_configuration), 
   {
   mod_no_switch <- mod_swimmerplot(
     module_id = "test_id",
@@ -263,8 +263,8 @@ test_that(
 })
 
 test_that(
-  "Tooltips support named list format with labels and values" |> 
-    vdoc[["add_spec"]](specs$interactivity$tooltip_format), 
+  "mod_swimmerplot() handles empty/null tooltip configurations" |> 
+    vdoc[["add_spec"]](specs$tooltip_handling), 
   {
   mod_empty <- mod_swimmerplot(
     module_id = "test_id",

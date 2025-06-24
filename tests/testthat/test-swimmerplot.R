@@ -1,6 +1,6 @@
 test_that(
-  "Swimmerplot function displays subject-level data over time" |> vdoc[["add_spec"]](
-    specs$plot$comprehensive_functionality
+  "swimmerplot() creates interactive girafe plot" |> vdoc[["add_spec"]](
+    specs$interactive_plot
   ), 
   {
   df1 <- data.frame(
@@ -60,8 +60,8 @@ test_that(
 })
 
 test_that(
-  "Swimmerplot function returns a ggplot object when interactive_plot=FALSE" |> vdoc[["add_spec"]](
-    specs$plot$non_interactive
+  "swimmerplot() returns ggplot when interactive_plot=FALSE" |> vdoc[["add_spec"]](
+    specs$static_plot
   ),
   {
   df1 <- data.frame(
@@ -124,7 +124,7 @@ test_that(
 })
 
 test_that(
-  "Subjects can be grouped by categorical variables using facets" |> vdoc[["add_spec"]](specs$plot$grouping),
+  "swimmerplot() supports subject grouping with facets" |> vdoc[["add_spec"]](specs$subject_grouping),
   {
   df1 <- data.frame(
     USUBJID = c("SUBJ-001", "SUBJ-002", "SUBJ-003"),
@@ -186,8 +186,8 @@ test_that(
 })
 
 test_that(
-  "Swimmerplot with grouping returns a ggplot object when interactive_plot=FALSE" |> vdoc[["add_spec"]](
-    specs$plot$grouped_non_interactive
+  "swimmerplot() with grouping returns ggplot when interactive_plot=FALSE" |> vdoc[["add_spec"]](
+    specs$grouped_static_plot
   ),
   {
   df1 <- data.frame(
@@ -253,8 +253,8 @@ test_that(
 })
 
 test_that(
-  "Tooltips support named list format with labels and values" |> vdoc[["add_spec"]](
-    specs$interactivity$comprehensive_tooltips
+  "generate_tooltip() handles named vectors and missing data" |> vdoc[["add_spec"]](
+    specs$tooltip_generation
   ), 
   {
   test_data <- data.frame(

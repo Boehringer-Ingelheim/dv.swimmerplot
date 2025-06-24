@@ -1,6 +1,6 @@
 test_that(
-  "Module is compatible with the DaVinci framework Module Manager" |> 
-    vdoc[["add_spec"]](specs$apps$mock_swimmerplot_mm), {
+  "mock swimmerplot MM app integrates with Module Manager" |> 
+    vdoc[["add_spec"]](specs$mm_integration), {
       app_path <- testthat::test_path("apps", "mock_swimmerplot_mm")
       app <- shinytest2::AppDriver$new(app_dir = app_path, name = "mock_swimmerplot_mm")
       
