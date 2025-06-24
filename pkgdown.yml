@@ -1,0 +1,12 @@
+pandoc: 2.9.2.1
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  communication: communication.html
+  dv-swimmerplot: dv-swimmerplot.html
+  qc: qc.html
+last_built: 2025-06-24T10:13Z
+urls:
+  reference: https://boehringer-ingelheim.github.io/dv.swimmerplot/reference
+  article: https://boehringer-ingelheim.github.io/dv.swimmerplot/articles
+
