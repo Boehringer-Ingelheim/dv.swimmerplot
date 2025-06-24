@@ -1,6 +1,6 @@
 test_that(
-  "Plot supports optional subject jumping feature when enabled" |> 
-    vdoc[["add_spec"]](specs$interactivity$jumping_feature), 
+  "swimmerplot_server() implements subject jumping with AFMM integration" |> 
+    vdoc[["add_spec"]](specs$jumping_configuration), 
   {
   subject_level_dataset <- shiny::reactive(data.frame(USUBJID = c("A", "B", "C"), SEX = c("M", "F", "M")))
   exposure_dataset <- shiny::reactive(data.frame(

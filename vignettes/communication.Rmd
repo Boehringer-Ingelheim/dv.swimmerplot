@@ -33,20 +33,16 @@ dm <- pharmaversesdtm::dm |>
 
 ex <- dplyr::left_join(x = pharmaversesdtm::ex, y = dm, by = "USUBJID") |>
   dplyr::mutate(
-    ex_ongoing = is.na(EXENDY)
+    ex_ongoing = is.na(EXENDY),
+    ex_end = ifelse(ex_ongoing, EXSTDY + 10, EXENDY) # For ongoing treatments
   )
 
-# Example using oncology response data - the module works with any type of response or outcome data
 rs <- dplyr::left_join(x = pharmaversesdtm::rs_onco, y = dm, by = "USUBJID") |>
   dplyr::filter(RSTEST == "Overall Response") |>
   dplyr::filter(RSEVAL == "INVESTIGATOR") |>
   dplyr::filter(!is.na(RSDY))
 
 data_list <- list(dm = dm, ex = ex, rs = rs)
-
-attributes(data_list$dm)$label <- "Demographics"
-attributes(data_list$ex)$label <- "Exposure"
-attributes(data_list$rs)$label <- "Response Assessment"
 
 module_list <- list(
   "Swimmer Plot" = dv.swimmerplot::mod_swimmerplot(
@@ -56,10 +52,10 @@ module_list <- list(
     response_dataset_name = "rs",
     subjid_var = "USUBJID",
     group_by_vars = c("SEX", "RACE", "ARM"),
-    sort_by_vars = c("AGE", "SEX", "RACE"),
+    sort_by_vars = c("AGE", "USUBJID"),
     sort_direction = "asc",
     trt_start_day_var = "EXSTDY",
-    trt_end_day_var = "EXENDY",
+    trt_end_day_var = "ex_end",
     trt_ongoing_var = "ex_ongoing",
     trt_tooltip_vars = c(
       "Subject ID: " = "USUBJID",

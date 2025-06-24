@@ -1,10 +1,7 @@
 test_that(
-  "Swimmerplot function displays subject-level data over time" |> vdoc[["add_spec"]](c(
-    specs$plot$basic_functionality,
-    specs$plot$sorting,
-    specs$plot$legend,
-    specs$visualization$ongoing_treatment
-  )), 
+  "swimmerplot() creates interactive girafe plot" |> vdoc[["add_spec"]](
+    specs$interactive_plot
+  ), 
   {
   df1 <- data.frame(
     USUBJID = c("SUBJ-001", "SUBJ-002"),
@@ -63,8 +60,8 @@ test_that(
 })
 
 test_that(
-  "Swimmerplot function returns a ggplot object when interactive_plot=FALSE" |> vdoc[["add_spec"]](
-    specs$plot$basic_functionality
+  "swimmerplot() returns ggplot when interactive_plot=FALSE" |> vdoc[["add_spec"]](
+    specs$static_plot
   ),
   {
   df1 <- data.frame(
@@ -127,7 +124,7 @@ test_that(
 })
 
 test_that(
-  "Subjects can be grouped by categorical variables using facets" |> vdoc[["add_spec"]](specs$plot$grouping),
+  "swimmerplot() supports subject grouping with facets" |> vdoc[["add_spec"]](specs$subject_grouping),
   {
   df1 <- data.frame(
     USUBJID = c("SUBJ-001", "SUBJ-002", "SUBJ-003"),
@@ -189,8 +186,8 @@ test_that(
 })
 
 test_that(
-  "Swimmerplot with grouping returns a ggplot object when interactive_plot=FALSE" |> vdoc[["add_spec"]](
-    specs$plot$grouping
+  "swimmerplot() with grouping returns ggplot when interactive_plot=FALSE" |> vdoc[["add_spec"]](
+    specs$grouped_static_plot
   ),
   {
   df1 <- data.frame(
@@ -256,10 +253,9 @@ test_that(
 })
 
 test_that(
-  "Tooltips support named list format with labels and values" |> vdoc[["add_spec"]](c(
-    specs$interactivity$tooltip_format,
-    specs$interactivity$tooltips
-  )), 
+  "generate_tooltip() handles named vectors and missing data" |> vdoc[["add_spec"]](
+    specs$tooltip_generation
+  ), 
   {
   test_data <- data.frame(
     SUBJID = c("S001", "S002"),
@@ -275,7 +271,7 @@ test_that(
     "Unit: " = "UNIT"
   )
   
-  result <- generate_tooltip(test_data, tooltip_vector)
+  result <- dv.swimmerplot:::generate_tooltip(test_data, tooltip_vector)
   
   expected <- c(
     "Parameter: Weight<br>Value: 80<br>Unit: kg",
@@ -284,13 +280,13 @@ test_that(
   
   expect_equal(result, expected)
   
-  empty_result <- generate_tooltip(test_data, c())
+  empty_result <- dv.swimmerplot:::generate_tooltip(test_data, c())
   expect_equal(empty_result, c("", ""))
   
-  null_result <- generate_tooltip(test_data, NULL)
+  null_result <- dv.swimmerplot:::generate_tooltip(test_data, NULL)
   expect_equal(null_result, c("", ""))
   
-  unnamed_result <- generate_tooltip(test_data, c("PARAM", "VALUE"))
+  unnamed_result <- dv.swimmerplot:::generate_tooltip(test_data, c("PARAM", "VALUE"))
   expect_equal(unnamed_result, c("", ""))
   
   tooltip_with_missing <- c(
@@ -299,7 +295,7 @@ test_that(
     "Missing: " = "NONEXISTENT" 
   )
   
-  result_with_missing <- generate_tooltip(test_data, tooltip_with_missing)
+  result_with_missing <- dv.swimmerplot:::generate_tooltip(test_data, tooltip_with_missing)
   
   expected_with_missing <- c(
     "Parameter: Weight<br>Value: 80",

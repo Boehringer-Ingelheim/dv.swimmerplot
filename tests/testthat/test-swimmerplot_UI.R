@@ -1,6 +1,6 @@
 test_that(
-  "Plot appearance can be customized with titles, labels, and dimensions" |> 
-    vdoc[["add_spec"]](specs$plot$customization), 
+  "swimmerplot_UI() generates UI with controls" |> 
+    vdoc[["add_spec"]](specs$ui_customization), 
   {
   ui <- swimmerplot_UI(
     id = "testmod",
