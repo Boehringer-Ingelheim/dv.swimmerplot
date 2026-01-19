@@ -3,6 +3,8 @@ MODULE_IDS <- pack_of_constants( # nolint
   GROUP_VARS = "group_vars",
   SORT_VARS = "sort_vars",
   SORT_DIRECTION = "sort_direction",
+  FILTER = "filter",
+  X_RNG = "x_rng",
   SWIMMER_PLOT = "swimmer_plot"
 )
 
@@ -31,35 +33,45 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
   ns <- shiny::NS(namespace = id)
   
   ui_elements <- list(
-    shiny::fluidRow(
-      shiny::column(
-        width = 4,
-        shiny::selectInput(
-          inputId = ns(MODULE_IDS$GROUP_VARS),
-          label = "Group subjects by:",
-          choices = group_by_vars,
-          multiple = TRUE
-        )
-      ),
-      shiny::column(
-        width = 4,
-        shiny::selectInput(
-          inputId = ns(MODULE_IDS$SORT_VARS),
-          label = "Sort subjects by:",
-          choices = sort_by_vars,
-          selected = NULL,
-          multiple = TRUE
-        )
-      ),
-      shiny::column(
-        width = 4,
-        shiny::radioButtons(
-          inputId = ns(MODULE_IDS$SORT_DIRECTION),
-          label = "Sort direction:",
-          choices = c("Ascending" = "asc", "Descending" = "desc"),
-          selected = "asc",
-          inline = TRUE
-        )
+    shiny::tags$div(
+      shiny::selectInput(
+        inputId = ns(MODULE_IDS$GROUP_VARS),
+        label = "Group subjects by:",
+        choices = group_by_vars,
+        multiple = TRUE
+      )
+    ),
+    shiny::tags$div(
+      shiny::selectInput(
+        inputId = ns(MODULE_IDS$SORT_VARS),
+        label = "Sort subjects by:",
+        choices = sort_by_vars,
+        selected = NULL,
+        multiple = TRUE
+      )
+    ),
+    shiny::tags$div(
+      shiny::radioButtons(
+        inputId = ns(MODULE_IDS$SORT_DIRECTION),
+        label = "Sort direction:",
+        choices = c("Ascending" = "asc", "Descending" = "desc"),
+        selected = "asc",
+        inline = TRUE
+      )
+    ),
+    shiny::tags$div(
+      shiny::selectInput(
+        inputId = ns(MODULE_IDS$FILTER),
+        label = "Select filter:",
+        choices = NULL,
+        multiple = TRUE
+      )
+    ),
+    shiny::tags$div(
+      shinyWidgets::numericRangeInput(
+        inputId = ns(MODULE_IDS$X_RNG),
+        label = "X Range:",
+        value = c(NA, NA)
       )
     )
   )
@@ -78,18 +90,28 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     )
   }
   
-  ui_elements <- c(
-    ui_elements,
-    list(
-      ggiraph::girafeOutput(
-        outputId = ns(MODULE_IDS$SWIMMER_PLOT),
-        width = "100%",
-        height = NULL
-      )
+  drop_menu <- do.call(
+    shinyWidgets::dropMenu,
+    c(
+      list(
+        tag = shiny::actionButton(
+          inputId = ns("plot_options"),
+          label = "Plot Options",
+          icon = shiny::icon("gear")
+        )
+      ),
+      ui_elements
     )
   )
-  
-  do.call(shiny::tagList, ui_elements)
+
+  shiny::tagList(
+    drop_menu,
+    ggiraph::girafeOutput(
+      outputId = ns(MODULE_IDS$SWIMMER_PLOT),
+      width = "100%",
+      height = NULL
+    )
+  )
 }
 
 #' Swimmer Plot Module server
@@ -105,6 +127,8 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
 #' @param response_dataset `[reactive(data.frame)]` Dataset containing response/event records. Optional - 
 #' can be a reactive that returns NULL to create a plot without response data.
 #' @param afmm `[list]` Arguments from Module Manager containing datasets, utilities and module communication channels.
+#' @param filter_var `[character(1)]` Name of the variable to use for filtering subjects.
+#' @param filter_default_vals `[character(n)]` Default selected values for the filter variable upon initialization.
 #'
 #' @seealso [mod_swimmerplot()] and [swimmerplot_UI()]
 #' 
@@ -124,6 +148,9 @@ swimmerplot_server <- function(
   color_palette = NULL,
   result_study_day_var = NULL,
   result_tooltip_vars = NULL,
+  trt_annotation_vars = NULL,
+  trt_annotation_x = NULL,
+  result_annotation_vars = NULL,
   result_cat_var = NULL,
   result_legend_label = "Response",
   shape_mapping = NULL,
@@ -136,7 +163,9 @@ swimmerplot_server <- function(
   sort_by_vars = NULL,
   sort_direction = "asc",
   receiver_id = NULL,
-  afmm = NULL
+  afmm = NULL,
+  filter_var = "ARM",
+  filter_default_vals = NULL
 ) {
   checkmate::assert_string(id)
   checkmate::assert_class(subject_level_dataset, "reactive")
@@ -177,9 +206,111 @@ swimmerplot_server <- function(
     id,
     function(input, output, session) {
       selected_subject <- shiny::reactiveVal(NULL)
+      filter_initialized <- shiny::reactiveVal(FALSE)
+
+      bookmark_key <- paste0("dv.swimmerplot.", id, ".", MODULE_IDS$FILTER)
+      restored_filter_sel <- shiny::reactiveVal(NULL)
+      restore_nonce <- shiny::reactiveVal(0)
+      restore_applied_nonce <- shiny::reactiveVal(0)
+
+      shiny::onBookmark(function(state) {
+        state$values[[bookmark_key]] <- list(value = input[[MODULE_IDS$FILTER]])
+      })
+
+      shiny::onRestore(function(state) {
+        if (!is.null(state$values[[bookmark_key]])) {
+          restored_filter_sel(state$values[[bookmark_key]]$value)
+        } else {
+          restored_filter_sel(state$input[[MODULE_IDS$FILTER]])
+        }
+        restore_nonce(shiny::isolate(restore_nonce() + 1))
+      })
+
+      shiny::observeEvent(list(subject_level_dataset(), restore_nonce()), {
+        data <- subject_level_dataset()
+        if (is.null(filter_var) || is.null(data) || !(filter_var %in% names(data))) {
+          return()
+        }
+
+        filter_vals <- unique(stats::na.omit(data[[filter_var]]))
+
+        is_restore <- restore_nonce() > restore_applied_nonce()
+        selected <- if (is_restore) {
+          sel <- restored_filter_sel()
+          if (is.null(sel) || length(sel) == 0) {
+            character(0)
+          } else {
+            intersect(sel, filter_vals)
+          }
+        } else {
+          if (is.null(filter_default_vals)) filter_vals else intersect(filter_default_vals, filter_vals)
+        }
+
+        shiny::updateSelectInput(
+          session = session,
+          inputId = MODULE_IDS$FILTER,
+          choices = filter_vals,
+          selected = selected
+        )
+
+        if (is_restore) {
+          restore_applied_nonce(restore_nonce())
+        }
+
+        filter_initialized(TRUE)
+      })
+
+      filtered_subject_level <- shiny::reactive({
+        data <- subject_level_dataset()
+        if (is.null(filter_var) || is.null(data) || !(filter_var %in% names(data))) {
+          return(data)
+        }
+
+        sel_vals <- input[[MODULE_IDS$FILTER]]
+
+        if (!isTRUE(filter_initialized())) {
+          return(data)
+        }
+
+        if (is.null(sel_vals) || length(sel_vals) == 0) {
+          return(data[0, , drop = FALSE])
+        }
+
+        data[data[[filter_var]] %in% sel_vals, , drop = FALSE]
+      })
+      
+      filtered_subj_ids <- shiny::reactive({
+        subj_data <- filtered_subject_level()
+        if (is.null(subj_data) || nrow(subj_data) == 0) {
+          return(character())
+        }
+        subj_data[[subjid_var]]
+      })
+
+      filtered_exposure <- shiny::reactive({
+        ex <- exposure_dataset()
+        subj_ids <- filtered_subj_ids()
+        if (length(subj_ids) == 0) {
+          return(ex[0, , drop = FALSE])
+        }
+        ex[ex[[subjid_var]] %in% subj_ids, , drop = FALSE]
+      })
+
+      filtered_response <- shiny::reactive({
+        rs <- response_dataset()
+        if (is.null(rs)) {
+          return(NULL)
+        }
+        subj_ids <- filtered_subj_ids()
+        if (length(subj_ids) == 0) {
+          return(rs[0, , drop = FALSE])
+        }
+        rs[rs[[subjid_var]] %in% subj_ids, , drop = FALSE]
+      })
       
       output[[MODULE_IDS$SWIMMER_PLOT]] <- ggiraph::renderGirafe({
-        n_subjects <- nrow(subject_level_dataset())
+        subj_data <- filtered_subject_level()
+        n_subjects <- nrow(subj_data)
 
         shiny::validate(
           shiny::need(
@@ -198,11 +329,23 @@ swimmerplot_server <- function(
           selected_sort_vars <- NULL
         }
         
-        response_data <- response_dataset()
+        response_data <- filtered_response()
+
+        x_rng <- input[[MODULE_IDS$X_RNG]]
+        x_rng_lower <- NULL
+        x_rng_upper <- NULL
+        if (!is.null(x_rng) && length(x_rng) == 2) {
+          if (!is.na(x_rng[[1]])) {
+            x_rng_lower <- x_rng[[1]]
+          }
+          if (!is.na(x_rng[[2]])) {
+            x_rng_upper <- x_rng[[2]]
+          }
+        }
 
         swimmerplot(
-          subject_level_dataset = subject_level_dataset(),
-          exposure_dataset = exposure_dataset(),
+          subject_level_dataset = subj_data,
+          exposure_dataset = filtered_exposure(),
           response_dataset = response_data,
           subjid_var = subjid_var,
           group_by_vars = input[[MODULE_IDS$GROUP_VARS]],
@@ -217,6 +360,9 @@ swimmerplot_server <- function(
           color_palette = color_palette,
           result_study_day_var = result_study_day_var,
           result_tooltip_vars = result_tooltip_vars,
+          trt_annotation_vars = trt_annotation_vars,
+          trt_annotation_x = trt_annotation_x,
+          result_annotation_vars = result_annotation_vars,
           result_cat_var = result_cat_var,
           result_legend_label = result_legend_label,
           shape_mapping = shape_mapping,
@@ -226,6 +372,8 @@ swimmerplot_server <- function(
           plot_y_label = plot_y_label,
           plot_width = plot_width,
           plot_height = plot_height,
+          x_rng_lower = x_rng_lower,
+          x_rng_upper = x_rng_upper,
           enable_jumping = !is.null(receiver_id)
         )      
       })
@@ -284,6 +432,10 @@ swimmerplot_server <- function(
 #' @param result_tooltip_vars `[character(n)]` Character vector of variables for tooltip information on response.
 #'   Optionally named to add labels in tooltips (e.g., c("Response: " = "RSORRES")). 
 #'   Only used when response_dataset_name is provided.
+#' @param trt_annotation_vars `[character(n)]` Character vector of variables for fixed text annotation on exposure.
+#' @param trt_annotation_x `[numeric(1)]` X-axis position for a left-aligned fixed exposure annotation column.
+#'   If NULL, the exposure annotation is placed after each exposure bar end.
+#' @param result_annotation_vars `[character(n)]` Character vector of variables for fixed text annotation on response points.
 #' @param result_cat_var `[character(1)]` Name of the variable representing the type of response. 
 #' Only used when response_dataset_name is provided.
 #' @param result_legend_label `[character(1)]` Legend title for the response type. 
@@ -299,6 +451,8 @@ swimmerplot_server <- function(
 #' If NULL, height will be calculated automatically based on the number of subjects.
 #' @param receiver_id `[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID). 
 #' Set to NULL to disable the communication functionality.
+#' @param filter_var `[character(1)]` Name of the variable to use for filtering subjects.
+#' @param filter_default_vals `[character(n)]` Default selected values for the filter variable upon initialization.
 #'
 #' @return A list composed of the following elements:
 #' \itemize{
@@ -328,6 +482,9 @@ mod_swimmerplot <- function(
   color_palette = NULL,
   result_study_day_var = NULL,
   result_tooltip_vars = NULL,
+  trt_annotation_vars = NULL,
+  trt_annotation_x = NULL,
+  result_annotation_vars = NULL,
   result_cat_var = NULL,
   result_legend_label = NULL,
   shape_mapping = NULL,
@@ -337,7 +494,9 @@ mod_swimmerplot <- function(
   plot_y_label = NULL,
   plot_width = NULL,
   plot_height = NULL,
-  receiver_id = NULL
+  receiver_id = NULL,
+  filter_var = "ARM",
+  filter_default_vals = NULL
 ) {
   checkmate::assert_string(module_id)
   checkmate::assert_string(subject_level_dataset_name)
@@ -359,6 +518,9 @@ mod_swimmerplot <- function(
   )
   checkmate::assert_string(result_study_day_var, null.ok = TRUE)
   checkmate::assert_character(result_tooltip_vars, null.ok = TRUE)
+  checkmate::assert_character(trt_annotation_vars, null.ok = TRUE)
+  checkmate::assert_number(trt_annotation_x, null.ok = TRUE)
+  checkmate::assert_character(result_annotation_vars, null.ok = TRUE)
   checkmate::assert_string(result_cat_var, null.ok = TRUE)
   checkmate::assert_string(result_legend_label, null.ok = TRUE)
   checkmate::assert(
@@ -372,6 +534,15 @@ mod_swimmerplot <- function(
   checkmate::assert_number(plot_width, lower = 0, null.ok = TRUE)
   checkmate::assert_number(plot_height, lower = 0, null.ok = TRUE)
   checkmate::assert_string(receiver_id, null.ok = TRUE)
+  checkmate::assert_string(filter_var, null.ok = TRUE)
+  checkmate::assert_character(
+    filter_default_vals,
+    min.chars = 1,
+    any.missing = FALSE,
+    unique = TRUE,
+    min.len = 1,
+    null.ok = TRUE
+  )
   
   mod <- list(
     ui = function(mod_id) {
@@ -414,6 +585,9 @@ mod_swimmerplot <- function(
         color_palette = color_palette,
         result_study_day_var = result_study_day_var,
         result_tooltip_vars = result_tooltip_vars,
+        trt_annotation_vars = trt_annotation_vars,
+        trt_annotation_x = trt_annotation_x,
+        result_annotation_vars = result_annotation_vars,
         result_cat_var = result_cat_var,
         result_legend_label = result_legend_label,
         shape_mapping = shape_mapping,
@@ -426,7 +600,9 @@ mod_swimmerplot <- function(
         sort_by_vars = sort_by_vars,
         sort_direction = sort_direction,
         receiver_id = receiver_id,
-        afmm = afmm
+        afmm = afmm,
+        filter_var = filter_var,
+        filter_default_vals = filter_default_vals
       )
     },
     

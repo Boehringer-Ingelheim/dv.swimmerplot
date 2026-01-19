@@ -22,6 +22,9 @@ mod_swimmerplot(
   color_palette = NULL,
   result_study_day_var = NULL,
   result_tooltip_vars = NULL,
+  trt_annotation_vars = NULL,
+  trt_annotation_x = NULL,
+  result_annotation_vars = NULL,
   result_cat_var = NULL,
   result_legend_label = NULL,
   shape_mapping = NULL,
@@ -31,7 +34,9 @@ mod_swimmerplot(
   plot_y_label = NULL,
   plot_width = NULL,
   plot_height = NULL,
-  receiver_id = NULL
+  receiver_id = NULL,
+  filter_var = "ARM",
+  filter_default_vals = NULL
 )
 }
 \arguments{
@@ -75,6 +80,13 @@ Only used when response_dataset_name is provided.}
 Optionally named to add labels in tooltips (e.g., c("Response: " = "RSORRES")). 
 Only used when response_dataset_name is provided.}
 
+\item{trt_annotation_vars}{`[character(n)]` Character vector of variables for fixed text annotation on exposure.}
+
+\item{trt_annotation_x}{`[numeric(1)]` X-axis position for a left-aligned fixed exposure annotation column.
+If NULL, the exposure annotation is placed after each exposure bar end.}
+
+\item{result_annotation_vars}{`[character(n)]` Character vector of variables for fixed text annotation on response points.}
+
 \item{result_cat_var}{`[character(1)]` Name of the variable representing the type of response. 
 Only used when response_dataset_name is provided.}
 
@@ -99,6 +111,10 @@ If NULL, height will be calculated automatically based on the number of subjects
 
 \item{receiver_id}{`[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID). 
 Set to NULL to disable the communication functionality.}
+
+\item{filter_var}{`[character(1)]` Name of the variable to use for filtering subjects.}
+
+\item{filter_default_vals}{`[character(n)]` Default selected values for the filter variable upon initialization.}
 }
 \value{
 A list composed of the following elements:

@@ -30,6 +30,11 @@ swimmerplot(
   plot_y_label = "Subject ID",
   plot_width = NULL,
   plot_height = NULL,
+  x_rng_lower = NULL,
+  x_rng_upper = NULL,
+  trt_annotation_vars = NULL,
+  trt_annotation_x = NULL,
+  result_annotation_vars = NULL,
   enable_jumping = FALSE,
   interactive_plot = TRUE
 )
@@ -93,6 +98,17 @@ Only used when response_dataset is provided.}
 \item{plot_width}{`[numeric(1)]` Width of the graphics region in inches.}
 
 \item{plot_height}{`[numeric(1)]` Height of the graphics region in inches.}
+
+\item{x_rng_lower}{`[numeric(1) | NULL]` Lower limit of the x-axis visible range.}
+
+\item{x_rng_upper}{`[numeric(1) | NULL]` Upper limit of the x-axis visible range.}
+
+\item{trt_annotation_vars}{`[character(n)]` Character vector of variables for fixed text annotation on exposure.}
+
+\item{trt_annotation_x}{`[numeric(1)]` X-axis position for a left-aligned fixed exposure annotation column.
+If NULL, the exposure annotation is placed after each exposure bar end.}
+
+\item{result_annotation_vars}{`[character(n)]` Character vector of variables for fixed text annotation on response points.}
 
 \item{enable_jumping}{`[logical(1)]` Whether to enable jumping behavior on hover.}
 
