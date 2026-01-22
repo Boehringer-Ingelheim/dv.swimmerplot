@@ -82,7 +82,10 @@ mock_swimmerplot_mm <- function() {
     plot_x_label = "Study Day",
     plot_y_label = "Subject ID",
     plot_width = 10,
-    plot_height = NULL
+    plot_height = NULL,
+    filter_data = "rs",
+    filter_var = "RSORRES",
+    filter_values= c("CR","SD")
   )
   
   module_list <- list(

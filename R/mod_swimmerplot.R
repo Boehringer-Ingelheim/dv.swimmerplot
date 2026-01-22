@@ -104,13 +104,60 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     )
   )
 
-  shiny::tagList(
-    drop_menu,
+  scroll_id <- ns("swimmer_scroll")
+  legend_wrap_id <- ns("legend_wrap")
+
+  legend_menu <- shinyWidgets::dropMenu(
+    tag = shiny::actionButton(
+      inputId = ns("legend_toggle"),
+      label = "Legend",
+      icon = shiny::icon("list")
+    ),
+    shiny::tags$div(
+      style = "padding: 6px 10px; max-width: 260px;",
+      shiny::uiOutput(outputId = ns("plot_legend"))
+    )
+  )
+
+  legend_script <- shiny::tags$script(
+    shiny::HTML(
+      paste0(
+        "document.addEventListener('DOMContentLoaded', function(){",
+        "function bindLegend(){",
+        "var el=document.getElementById('", scroll_id, "');",
+        "var legend=document.getElementById('", legend_wrap_id, "');",
+        "if(!el||!legend){return;}",
+        "if(el.dataset.legendBound){return;}",
+        "el.dataset.legendBound='1';",
+        "var toggle=function(){legend.style.display=el.scrollTop>0?'block':'none';};",
+        "el.addEventListener('scroll', toggle);",
+        "toggle();",
+        "}",
+        "bindLegend();",
+        "setInterval(bindLegend, 1000);",
+        "});"
+      )
+    )
+  )
+
+  shiny::tags$div(
+    id = scroll_id,
+    style = "height: 100%; overflow-y: auto;",
+    shiny::tags$div(
+      style = "position: sticky; top: 0; z-index: 1000; background: #fff;",
+      drop_menu,
+      shiny::tags$div(
+        id = legend_wrap_id,
+        style = "display: none;",
+        legend_menu
+      )
+    ),
     ggiraph::girafeOutput(
       outputId = ns(MODULE_IDS$SWIMMER_PLOT),
       width = "100%",
       height = NULL
-    )
+    ),
+    legend_script
   )
 }
 
@@ -164,7 +211,11 @@ swimmerplot_server <- function(
   sort_direction = "asc",
   receiver_id = NULL,
   afmm = NULL,
+  filter_dataset = NULL,
+  filter_on_exposure = FALSE,
+  filter_on_response = FALSE,
   filter_var = "ARM",
+  filter_values = NULL,
   filter_default_vals = NULL
 ) {
   checkmate::assert_string(id)
@@ -201,6 +252,10 @@ swimmerplot_server <- function(
   checkmate::assert_choice(sort_direction, c("asc", "desc"))
   
   checkmate::assert_string(receiver_id, null.ok = TRUE)
+  checkmate::assert_class(filter_dataset, "reactive", null.ok = TRUE)
+  checkmate::assert_flag(filter_on_exposure)
+  checkmate::assert_flag(filter_on_response)
+  checkmate::assert_character(filter_values, min.chars = 1, any.missing = FALSE, unique = TRUE, min.len = 1, null.ok = TRUE)
   
   shiny::moduleServer(
     id,
@@ -212,6 +267,14 @@ swimmerplot_server <- function(
       restored_filter_sel <- shiny::reactiveVal(NULL)
       restore_nonce <- shiny::reactiveVal(0)
       restore_applied_nonce <- shiny::reactiveVal(0)
+
+      filter_source <- shiny::reactive({
+        if (!is.null(filter_dataset)) {
+          filter_dataset()
+        } else {
+          subject_level_dataset()
+        }
+      })
 
       shiny::onBookmark(function(state) {
         state$values[[bookmark_key]] <- list(value = input[[MODULE_IDS$FILTER]])
@@ -226,8 +289,8 @@ swimmerplot_server <- function(
         restore_nonce(shiny::isolate(restore_nonce() + 1))
       })
 
-      shiny::observeEvent(list(subject_level_dataset(), restore_nonce()), {
-        data <- subject_level_dataset()
+      shiny::observeEvent(list(filter_source(), restore_nonce()), {
+        data <- filter_source()
         if (is.null(filter_var) || is.null(data) || !(filter_var %in% names(data))) {
           return()
         }
@@ -242,6 +305,8 @@ swimmerplot_server <- function(
           } else {
             intersect(sel, filter_vals)
           }
+        } else if (!is.null(filter_values)) {
+          intersect(filter_values, filter_vals)
         } else {
           if (is.null(filter_default_vals)) filter_vals else intersect(filter_default_vals, filter_vals)
         }
@@ -249,6 +314,7 @@ swimmerplot_server <- function(
         shiny::updateSelectInput(
           session = session,
           inputId = MODULE_IDS$FILTER,
+          label = if (is.null(filter_var)) "Select filter:" else paste0("Select filter (", filter_var, "):"),
           choices = filter_vals,
           selected = selected
         )
@@ -262,7 +328,12 @@ swimmerplot_server <- function(
 
       filtered_subject_level <- shiny::reactive({
         data <- subject_level_dataset()
-        if (is.null(filter_var) || is.null(data) || !(filter_var %in% names(data))) {
+        source_data <- filter_source()
+        if (is.null(filter_var) || is.null(source_data) || !(filter_var %in% names(source_data))) {
+          return(data)
+        }
+
+        if (!(subjid_var %in% names(source_data))) {
           return(data)
         }
 
@@ -276,7 +347,14 @@ swimmerplot_server <- function(
           return(data[0, , drop = FALSE])
         }
 
-        data[data[[filter_var]] %in% sel_vals, , drop = FALSE]
+        filtered_source <- source_data[source_data[[filter_var]] %in% sel_vals, , drop = FALSE]
+        subj_ids <- unique(filtered_source[[subjid_var]])
+
+        if (length(subj_ids) == 0) {
+          return(data[0, , drop = FALSE])
+        }
+
+        data[data[[subjid_var]] %in% subj_ids, , drop = FALSE]
       })
       
       filtered_subj_ids <- shiny::reactive({
@@ -293,7 +371,26 @@ swimmerplot_server <- function(
         if (length(subj_ids) == 0) {
           return(ex[0, , drop = FALSE])
         }
-        ex[ex[[subjid_var]] %in% subj_ids, , drop = FALSE]
+        ex_filtered <- ex[ex[[subjid_var]] %in% subj_ids, , drop = FALSE]
+
+        if (!isTRUE(filter_on_exposure)) {
+          return(ex_filtered)
+        }
+
+        if (is.null(filter_var) || !(filter_var %in% names(ex_filtered))) {
+          return(ex_filtered)
+        }
+
+        if (!isTRUE(filter_initialized())) {
+          return(ex_filtered)
+        }
+
+        sel_vals <- input[[MODULE_IDS$FILTER]]
+        if (is.null(sel_vals) || length(sel_vals) == 0) {
+          return(ex_filtered[0, , drop = FALSE])
+        }
+
+        ex_filtered[ex_filtered[[filter_var]] %in% sel_vals, , drop = FALSE]
       })
 
       filtered_response <- shiny::reactive({
@@ -305,7 +402,26 @@ swimmerplot_server <- function(
         if (length(subj_ids) == 0) {
           return(rs[0, , drop = FALSE])
         }
-        rs[rs[[subjid_var]] %in% subj_ids, , drop = FALSE]
+        rs_filtered <- rs[rs[[subjid_var]] %in% subj_ids, , drop = FALSE]
+
+        if (!isTRUE(filter_on_response)) {
+          return(rs_filtered)
+        }
+
+        if (is.null(filter_var) || !(filter_var %in% names(rs_filtered))) {
+          return(rs_filtered)
+        }
+
+        if (!isTRUE(filter_initialized())) {
+          return(rs_filtered)
+        }
+
+        sel_vals <- input[[MODULE_IDS$FILTER]]
+        if (is.null(sel_vals) || length(sel_vals) == 0) {
+          return(rs_filtered[0, , drop = FALSE])
+        }
+
+        rs_filtered[rs_filtered[[filter_var]] %in% sel_vals, , drop = FALSE]
       })
       
       output[[MODULE_IDS$SWIMMER_PLOT]] <- ggiraph::renderGirafe({
@@ -376,6 +492,112 @@ swimmerplot_server <- function(
           x_rng_upper = x_rng_upper,
           enable_jumping = !is.null(receiver_id)
         )      
+      })
+
+      output[["plot_legend"]] <- shiny::renderUI({
+        ex <- filtered_exposure()
+        rs <- filtered_response()
+
+        trt_vals <- character()
+        if (!is.null(trt_group_var) && !is.null(ex) && nrow(ex) > 0 && trt_group_var %in% names(ex)) {
+          trt_raw <- stats::na.omit(ex[[trt_group_var]])
+          trt_vals <- sort(unique(as.character(trt_raw)))
+        }
+
+        rs_vals <- character()
+        if (!is.null(result_cat_var) && !is.null(rs) && nrow(rs) > 0 && result_cat_var %in% names(rs)) {
+          rs_raw <- stats::na.omit(rs[[result_cat_var]])
+          rs_vals <- sort(unique(as.character(rs_raw)))
+        }
+
+        if (!is.null(color_palette) && !is.null(names(color_palette))) {
+          trt_vals <- trt_vals[trt_vals %in% names(color_palette)]
+        }
+
+        if (!is.null(shape_mapping) && !is.null(names(shape_mapping))) {
+          rs_vals <- rs_vals[rs_vals %in% names(shape_mapping)]
+        }
+
+        if (length(trt_vals) == 0 && length(rs_vals) == 0) {
+          return(NULL)
+        }
+
+        shape_symbol <- function(val) {
+          key <- as.character(val)
+          if (key == "16") return("●")
+          if (key == "17") return("▲")
+          if (key == "15") return("■")
+          if (key == "18") return("◆")
+          if (key == "3") return("+")
+          if (key == "4") return("×")
+          if (key == "1") return("○")
+          if (key == "2") return("△")
+          if (key == "0") return("□")
+          "●"
+        }
+
+        hue_pal <- function(n) {
+          if (n == 0) return(character())
+          h <- seq(15, 375, length.out = n + 1)
+          grDevices::hcl(h[-(n + 1)], l = 65, c = 100)
+        }
+
+        shape_pal <- function(n) {
+          vals <- c(16, 17, 15, 3, 7, 8)
+          rep(vals, length.out = n)
+        }
+
+        make_item <- function(label, symbol, color) {
+          shiny::tags$div(
+            style = "display:flex;align-items:center;gap:8px;line-height:1.4;",
+            shiny::tags$span(
+              style = paste0(
+                "color:", color, ";font-weight:700;",
+                "display:inline-block;width:14px;text-align:center;font-size:14px;"
+              ),
+              symbol
+            ),
+            shiny::tags$span(style = "font-size:13px;", label)
+          )
+        }
+
+        trt_cols <- character()
+        if (length(trt_vals) > 0) {
+          if (!is.null(color_palette) && !is.null(names(color_palette))) {
+            trt_cols <- unname(color_palette[trt_vals])
+          } else {
+            trt_cols <- hue_pal(length(trt_vals))
+          }
+        }
+
+        rs_shapes <- character()
+        if (length(rs_vals) > 0) {
+          if (!is.null(shape_mapping) && !is.null(names(shape_mapping))) {
+            rs_shapes <- as.character(shape_mapping[rs_vals])
+          } else {
+            rs_shapes <- as.character(shape_pal(length(rs_vals)))
+          }
+        }
+
+        trt_items <- lapply(seq_along(trt_vals), function(i) {
+          make_item(as.character(trt_vals[[i]]), "■", trt_cols[[i]])
+        })
+
+        rs_items <- lapply(seq_along(rs_vals), function(i) {
+          make_item(as.character(rs_vals[[i]]), shape_symbol(rs_shapes[[i]]), "#333333")
+        })
+
+        shiny::tags$div(
+          if (length(trt_items) > 0) shiny::tags$div(
+            shiny::tags$div(style = "font-weight:600;margin:4px 0;", trt_legend_label),
+            trt_items
+          ),
+          if (length(rs_items) > 0) shiny::tags$div(
+            style = "margin-top:8px;",
+            shiny::tags$div(style = "font-weight:600;margin:4px 0;", result_legend_label),
+            rs_items
+          )
+        )
       })
       
       shiny::observeEvent(input$swimmer_plot_selected, {
@@ -495,7 +717,9 @@ mod_swimmerplot <- function(
   plot_width = NULL,
   plot_height = NULL,
   receiver_id = NULL,
+  filter_data = subject_level_dataset_name,
   filter_var = "ARM",
+  filter_values = NULL,
   filter_default_vals = NULL
 ) {
   checkmate::assert_string(module_id)
@@ -534,7 +758,16 @@ mod_swimmerplot <- function(
   checkmate::assert_number(plot_width, lower = 0, null.ok = TRUE)
   checkmate::assert_number(plot_height, lower = 0, null.ok = TRUE)
   checkmate::assert_string(receiver_id, null.ok = TRUE)
+  checkmate::assert_string(filter_data, null.ok = TRUE)
   checkmate::assert_string(filter_var, null.ok = TRUE)
+  checkmate::assert_character(
+    filter_values,
+    min.chars = 1,
+    any.missing = FALSE,
+    unique = TRUE,
+    min.len = 1,
+    null.ok = TRUE
+  )
   checkmate::assert_character(
     filter_default_vals,
     min.chars = 1,
@@ -569,6 +802,18 @@ mod_swimmerplot <- function(
           afmm[["filtered_dataset"]]()[[response_dataset_name]]
         )
       }
+
+      filter_dataset <- shiny::reactive({
+        data <- afmm[["filtered_dataset"]]()
+        if (is.null(filter_data) || is.null(data) || !(filter_data %in% names(data))) {
+          return(NULL)
+        }
+        data[[filter_data]]
+      })
+
+      filter_on_exposure <- !is.null(filter_data) && identical(filter_data, exposure_dataset_name)
+      filter_on_response <- !is.null(response_dataset_name) && !is.null(filter_data) && 
+        identical(filter_data, response_dataset_name)
       
       swimmerplot_server(
         id = module_id,
@@ -601,7 +846,11 @@ mod_swimmerplot <- function(
         sort_direction = sort_direction,
         receiver_id = receiver_id,
         afmm = afmm,
+        filter_dataset = filter_dataset,
+        filter_on_exposure = filter_on_exposure,
+        filter_on_response = filter_on_response,
         filter_var = filter_var,
+        filter_values = filter_values,
         filter_default_vals = filter_default_vals
       )
     },
