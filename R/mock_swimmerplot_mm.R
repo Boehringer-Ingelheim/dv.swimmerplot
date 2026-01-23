@@ -85,7 +85,7 @@ mock_swimmerplot_mm <- function() {
     plot_height = NULL,
     filter_data = "rs",
     filter_var = "RSORRES",
-    filter_values= c("CR","SD")
+    filter_values = c("CR", "SD")
   )
   
   module_list <- list(

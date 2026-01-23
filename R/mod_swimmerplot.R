@@ -300,7 +300,7 @@ swimmerplot_server <- function(
         is_restore <- restore_nonce() > restore_applied_nonce()
         selected <- if (is_restore) {
           sel <- restored_filter_sel()
-          if (is.null(sel) || length(sel) == 0) {
+          if (length(sel) == 0) {
             character(0)
           } else {
             intersect(sel, filter_vals)
@@ -343,7 +343,7 @@ swimmerplot_server <- function(
           return(data)
         }
 
-        if (is.null(sel_vals) || length(sel_vals) == 0) {
+        if (length(sel_vals) == 0) {
           return(data[0, , drop = FALSE])
         }
 
@@ -365,63 +365,42 @@ swimmerplot_server <- function(
         subj_data[[subjid_var]]
       })
 
-      filtered_exposure <- shiny::reactive({
-        ex <- exposure_dataset()
-        subj_ids <- filtered_subj_ids()
-        if (length(subj_ids) == 0) {
-          return(ex[0, , drop = FALSE])
-        }
-        ex_filtered <- ex[ex[[subjid_var]] %in% subj_ids, , drop = FALSE]
-
-        if (!isTRUE(filter_on_exposure)) {
-          return(ex_filtered)
-        }
-
-        if (is.null(filter_var) || !(filter_var %in% names(ex_filtered))) {
-          return(ex_filtered)
-        }
-
-        if (!isTRUE(filter_initialized())) {
-          return(ex_filtered)
-        }
-
-        sel_vals <- input[[MODULE_IDS$FILTER]]
-        if (is.null(sel_vals) || length(sel_vals) == 0) {
-          return(ex_filtered[0, , drop = FALSE])
-        }
-
-        ex_filtered[ex_filtered[[filter_var]] %in% sel_vals, , drop = FALSE]
-      })
-
-      filtered_response <- shiny::reactive({
-        rs <- response_dataset()
-        if (is.null(rs)) {
+      apply_subject_filter <- function(data, apply_var_filter) {
+        if (is.null(data)) {
           return(NULL)
         }
         subj_ids <- filtered_subj_ids()
         if (length(subj_ids) == 0) {
-          return(rs[0, , drop = FALSE])
+          return(data[0, , drop = FALSE])
         }
-        rs_filtered <- rs[rs[[subjid_var]] %in% subj_ids, , drop = FALSE]
+        data <- data[data[[subjid_var]] %in% subj_ids, , drop = FALSE]
 
-        if (!isTRUE(filter_on_response)) {
-          return(rs_filtered)
+        if (!isTRUE(apply_var_filter)) {
+          return(data)
         }
 
-        if (is.null(filter_var) || !(filter_var %in% names(rs_filtered))) {
-          return(rs_filtered)
+        if (is.null(filter_var) || !(filter_var %in% names(data))) {
+          return(data)
         }
 
         if (!isTRUE(filter_initialized())) {
-          return(rs_filtered)
+          return(data)
         }
 
         sel_vals <- input[[MODULE_IDS$FILTER]]
-        if (is.null(sel_vals) || length(sel_vals) == 0) {
-          return(rs_filtered[0, , drop = FALSE])
+        if (length(sel_vals) == 0) {
+          return(data[0, , drop = FALSE])
         }
 
-        rs_filtered[rs_filtered[[filter_var]] %in% sel_vals, , drop = FALSE]
+        data[data[[filter_var]] %in% sel_vals, , drop = FALSE]
+      }
+
+      filtered_exposure <- shiny::reactive({
+        apply_subject_filter(exposure_dataset(), filter_on_exposure)
+      })
+
+      filtered_response <- shiny::reactive({
+        apply_subject_filter(response_dataset(), filter_on_response)
       })
       
       output[[MODULE_IDS$SWIMMER_PLOT]] <- ggiraph::renderGirafe({
@@ -522,18 +501,22 @@ swimmerplot_server <- function(
           return(NULL)
         }
 
-        shape_symbol <- function(val) {
-          key <- as.character(val)
-          if (key == "16") return("●")
-          if (key == "17") return("▲")
-          if (key == "15") return("■")
-          if (key == "18") return("◆")
-          if (key == "3") return("+")
-          if (key == "4") return("×")
-          if (key == "1") return("○")
-          if (key == "2") return("△")
-          if (key == "0") return("□")
-          "●"
+        shape_icon <- function(val, color) {
+          pch_val <- suppressWarnings(as.integer(val))
+          if (is.na(pch_val)) {
+            pch_val <- 16
+          }
+          tmp <- tempfile(fileext = ".svg")
+          grDevices::svg(tmp, width = 0.2, height = 0.2, bg = "transparent")
+          old_par <- graphics::par(mar = c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
+          graphics::plot.new()
+          graphics::plot.window(xlim = c(0, 1), ylim = c(0, 1), asp = 1)
+          graphics::points(0.5, 0.5, pch = pch_val, cex = 1.1, col = color)
+          grDevices::dev.off()
+          graphics::par(old_par)
+          svg <- paste(readLines(tmp, warn = FALSE), collapse = "")
+          unlink(tmp)
+          shiny::HTML(svg)
         }
 
         hue_pal <- function(n) {
@@ -547,15 +530,16 @@ swimmerplot_server <- function(
           rep(vals, length.out = n)
         }
 
-        make_item <- function(label, symbol, color) {
+        make_item <- function(label, icon, color) {
           shiny::tags$div(
             style = "display:flex;align-items:center;gap:8px;line-height:1.4;",
             shiny::tags$span(
               style = paste0(
                 "color:", color, ";font-weight:700;",
-                "display:inline-block;width:14px;text-align:center;font-size:14px;"
+                "display:inline-flex;align-items:center;justify-content:center;",
+                "width:14px;height:14px;font-size:14px;"
               ),
-              symbol
+              icon
             ),
             shiny::tags$span(style = "font-size:13px;", label)
           )
@@ -584,7 +568,8 @@ swimmerplot_server <- function(
         })
 
         rs_items <- lapply(seq_along(rs_vals), function(i) {
-          make_item(as.character(rs_vals[[i]]), shape_symbol(rs_shapes[[i]]), "#333333")
+          icon <- shape_icon(rs_shapes[[i]], "#333333")
+          make_item(as.character(rs_vals[[i]]), icon, "#333333")
         })
 
         shiny::tags$div(
