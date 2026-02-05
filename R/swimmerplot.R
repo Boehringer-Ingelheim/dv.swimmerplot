@@ -241,7 +241,7 @@ swimmerplot <- function(
     annotation_trt_data <- annotation_trt_data[last_idx, , drop = FALSE]
   }
   
-  if (!is.null(trt_annotation_vars) && is.null(x_rng_upper) && !is.null(annotation_trt_data) && nrow(annotation_trt_data) > 0) {
+  if (!is.null(trt_annotation_vars) && !is.null(annotation_trt_data) && nrow(annotation_trt_data) > 0) {
     annotation_text <- annotation_trt_data$annotation_trt
     annotation_text <- annotation_text[!is.na(annotation_text) & nzchar(annotation_text)]
     if (length(annotation_text) > 0) {
@@ -254,32 +254,47 @@ swimmerplot <- function(
         x_values <- c(x_values, response_dataset[[result_study_day_var]])
       }
       x_values <- x_values[is.finite(x_values)]
-      if (length(x_values) == 0) {
-        x_limits <- c(0, 1)
-      } else {
+      x_range <- 1
+      if (length(x_values) > 0) {
         x_limits <- range(x_values, finite = TRUE, na.rm = TRUE)
+        x_range <- x_limits[2] - x_limits[1]
       }
-      x_range <- x_limits[2] - x_limits[1]
       if (!is.finite(x_range) || x_range <= 0) {
         x_range <- 1
       }
+
       text_width_in <- suppressWarnings(max(graphics::strwidth(annotation_text, units = "inches"), na.rm = TRUE))
       if (!is.finite(text_width_in)) {
         text_width_in <- 0
       }
-      extra_x <- if (!is.null(plot_width) && is.finite(plot_width) && plot_width > 0 && text_width_in > 0) {
-        text_width_in * (x_range / plot_width)
-      } else {
-        max_chars <- suppressWarnings(max(nchar(annotation_text), na.rm = TRUE))
-        if (!is.finite(max_chars)) {
-          max_chars <- 0
+
+      if (text_width_in > 0) {
+        min_width_for_text <- text_width_in / 0.85
+        if (is.finite(min_width_for_text) && min_width_for_text > plot_width) {
+          plot_width <- min_width_for_text
         }
-        max_chars * (x_range / 80)
       }
-      extra_x <- extra_x + (x_range * 0.01)
+
+      extra_x_from_in <- if (is.finite(plot_width) && plot_width > 0 && text_width_in > 0) {
+        text_width_in * (x_range / plot_width) * 1.1
+      } else {
+        0
+      }
+      max_chars <- suppressWarnings(max(nchar(annotation_text), na.rm = TRUE))
+      if (!is.finite(max_chars)) {
+        max_chars <- 0
+      }
+      extra_x <- max(extra_x_from_in, max_chars * (x_range / 40), x_range * 0.05)
+      if (!is.finite(extra_x)) {
+        extra_x <- x_range * 0.05
+      }
+
       annotation_x_max <- suppressWarnings(max(annotation_trt_data$annotation_x, na.rm = TRUE))
       if (is.finite(annotation_x_max)) {
-        x_rng_upper <- annotation_x_max + extra_x
+        desired_upper <- annotation_x_max + extra_x
+        if (is.null(x_rng_upper) || !is.finite(x_rng_upper)) {
+          x_rng_upper <- desired_upper
+        }
       }
     }
   }
