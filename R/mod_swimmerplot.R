@@ -140,7 +140,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     )
   )
 
-  shiny::tags$div(
+  div_content <- shiny::tags$div(
     id = scroll_id,
     style = "height: 100%; overflow-y: auto;",
     shiny::tags$div(
@@ -159,6 +159,8 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     ),
     legend_script
   )
+  
+  shiny::tagList(div_content)
 }
 
 #' Swimmer Plot Module server
