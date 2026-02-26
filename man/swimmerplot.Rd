@@ -34,7 +34,6 @@ swimmerplot(
   x_rng_upper = NULL,
   trt_annotation_vars = NULL,
   trt_annotation_x = NULL,
-  result_annotation_vars = NULL,
   enable_jumping = FALSE,
   interactive_plot = TRUE
 )
@@ -107,8 +106,6 @@ Only used when response_dataset is provided.}
 
 \item{trt_annotation_x}{`[numeric(1)]` X-axis position for a left-aligned fixed exposure annotation column.
 If NULL, the exposure annotation is placed after each exposure bar end.}
-
-\item{result_annotation_vars}{`[character(n)]` Character vector of variables for fixed text annotation on response points.}
 
 \item{enable_jumping}{`[logical(1)]` Whether to enable jumping behavior on hover.}
 

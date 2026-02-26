@@ -103,10 +103,10 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
       ui_elements
     )
   )
-
+  
   scroll_id <- ns("swimmer_scroll")
   legend_wrap_id <- ns("legend_wrap")
-
+  
   legend_menu <- shinyWidgets::dropMenu(
     tag = shiny::actionButton(
       inputId = ns("legend_toggle"),
@@ -118,7 +118,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
       shiny::uiOutput(outputId = ns("plot_legend"))
     )
   )
-
+  
   legend_script <- shiny::tags$script(
     shiny::HTML(
       paste0(
@@ -139,7 +139,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
       )
     )
   )
-
+  
   div_content <- shiny::tags$div(
     id = scroll_id,
     style = "height: 100%; overflow-y: auto;",
@@ -183,42 +183,41 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
 #' 
 #' @export
 swimmerplot_server <- function(
-  id,
-  subject_level_dataset,
-  exposure_dataset,
-  response_dataset,
-  subjid_var,
-  trt_start_day_var,
-  trt_end_day_var,
-  trt_ongoing_var,
-  trt_tooltip_vars = NULL,
-  trt_group_var = NULL,
-  trt_legend_label = "Treatment",
-  color_palette = NULL,
-  result_study_day_var = NULL,
-  result_tooltip_vars = NULL,
-  trt_annotation_vars = NULL,
-  trt_annotation_x = NULL,
-  result_annotation_vars = NULL,
-  result_cat_var = NULL,
-  result_legend_label = "Response",
-  shape_mapping = NULL,
-  plot_title = NULL,
-  plot_subtitle = NULL,
-  plot_x_label = "Study Day",
-  plot_y_label = "Subject ID",
-  plot_width = NULL,
-  plot_height = NULL,
-  sort_by_vars = NULL,
-  sort_direction = "asc",
-  receiver_id = NULL,
-  afmm = NULL,
-  filter_dataset = NULL,
-  filter_on_exposure = FALSE,
-  filter_on_response = FALSE,
-  filter_var = "ARM",
-  filter_values = NULL,
-  filter_default_vals = NULL
+    id,
+    subject_level_dataset,
+    exposure_dataset,
+    response_dataset,
+    subjid_var,
+    trt_start_day_var,
+    trt_end_day_var,
+    trt_ongoing_var,
+    trt_tooltip_vars = NULL,
+    trt_group_var = NULL,
+    trt_legend_label = "Treatment",
+    color_palette = NULL,
+    result_study_day_var = NULL,
+    result_tooltip_vars = NULL,
+    trt_annotation_vars = NULL,
+    trt_annotation_x = NULL,
+    result_cat_var = NULL,
+    result_legend_label = "Response",
+    shape_mapping = NULL,
+    plot_title = NULL,
+    plot_subtitle = NULL,
+    plot_x_label = "Study Day",
+    plot_y_label = "Subject ID",
+    plot_width = NULL,
+    plot_height = NULL,
+    sort_by_vars = NULL,
+    sort_direction = "asc",
+    receiver_id = NULL,
+    afmm = NULL,
+    filter_dataset = NULL,
+    filter_on_exposure = FALSE,
+    filter_on_response = FALSE,
+    filter_var = "ARM",
+    filter_values = NULL,
+    filter_default_vals = NULL
 ) {
   checkmate::assert_string(id)
   checkmate::assert_class(subject_level_dataset, "reactive")
@@ -264,12 +263,12 @@ swimmerplot_server <- function(
     function(input, output, session) {
       selected_subject <- shiny::reactiveVal(NULL)
       filter_initialized <- shiny::reactiveVal(FALSE)
-
+      
       bookmark_key <- paste0("dv.swimmerplot.", id, ".", MODULE_IDS$FILTER)
       restored_filter_sel <- shiny::reactiveVal(NULL)
       restore_nonce <- shiny::reactiveVal(0)
       restore_applied_nonce <- shiny::reactiveVal(0)
-
+      
       filter_source <- shiny::reactive({
         if (!is.null(filter_dataset)) {
           filter_dataset()
@@ -277,11 +276,11 @@ swimmerplot_server <- function(
           subject_level_dataset()
         }
       })
-
+      
       shiny::onBookmark(function(state) {
         state$values[[bookmark_key]] <- list(value = input[[MODULE_IDS$FILTER]])
       })
-
+      
       shiny::onRestore(function(state) {
         if (!is.null(state$values[[bookmark_key]])) {
           restored_filter_sel(state$values[[bookmark_key]]$value)
@@ -290,15 +289,15 @@ swimmerplot_server <- function(
         }
         restore_nonce(shiny::isolate(restore_nonce() + 1))
       })
-
+      
       shiny::observeEvent(list(filter_source(), restore_nonce()), {
         data <- filter_source()
         if (is.null(filter_var) || is.null(data) || !(filter_var %in% names(data))) {
           return()
         }
-
+        
         filter_vals <- unique(stats::na.omit(data[[filter_var]]))
-
+        
         is_restore <- restore_nonce() > restore_applied_nonce()
         selected <- if (is_restore) {
           sel <- restored_filter_sel()
@@ -312,7 +311,7 @@ swimmerplot_server <- function(
         } else {
           if (is.null(filter_default_vals)) filter_vals else intersect(filter_default_vals, filter_vals)
         }
-
+        
         shiny::updateSelectInput(
           session = session,
           inputId = MODULE_IDS$FILTER,
@@ -320,42 +319,42 @@ swimmerplot_server <- function(
           choices = filter_vals,
           selected = selected
         )
-
+        
         if (is_restore) {
           restore_applied_nonce(restore_nonce())
         }
-
+        
         filter_initialized(TRUE)
       })
-
+      
       filtered_subject_level <- shiny::reactive({
         data <- subject_level_dataset()
         source_data <- filter_source()
         if (is.null(filter_var) || is.null(source_data) || !(filter_var %in% names(source_data))) {
           return(data)
         }
-
+        
         if (!(subjid_var %in% names(source_data))) {
           return(data)
         }
-
+        
         sel_vals <- input[[MODULE_IDS$FILTER]]
-
+        
         if (!isTRUE(filter_initialized())) {
           return(data)
         }
-
+        
         if (length(sel_vals) == 0) {
           return(data[0, , drop = FALSE])
         }
-
+        
         filtered_source <- source_data[source_data[[filter_var]] %in% sel_vals, , drop = FALSE]
         subj_ids <- unique(filtered_source[[subjid_var]])
-
+        
         if (length(subj_ids) == 0) {
           return(data[0, , drop = FALSE])
         }
-
+        
         data[data[[subjid_var]] %in% subj_ids, , drop = FALSE]
       })
       
@@ -366,7 +365,7 @@ swimmerplot_server <- function(
         }
         subj_data[[subjid_var]]
       })
-
+      
       apply_subject_filter <- function(data, apply_var_filter) {
         if (is.null(data)) {
           return(NULL)
@@ -376,31 +375,31 @@ swimmerplot_server <- function(
           return(data[0, , drop = FALSE])
         }
         data <- data[data[[subjid_var]] %in% subj_ids, , drop = FALSE]
-
+        
         if (!isTRUE(apply_var_filter)) {
           return(data)
         }
-
+        
         if (is.null(filter_var) || !(filter_var %in% names(data))) {
           return(data)
         }
-
+        
         if (!isTRUE(filter_initialized())) {
           return(data)
         }
-
+        
         sel_vals <- input[[MODULE_IDS$FILTER]]
         if (length(sel_vals) == 0) {
           return(data[0, , drop = FALSE])
         }
-
+        
         data[data[[filter_var]] %in% sel_vals, , drop = FALSE]
       }
-
+      
       filtered_exposure <- shiny::reactive({
         apply_subject_filter(exposure_dataset(), filter_on_exposure)
       })
-
+      
       filtered_response <- shiny::reactive({
         apply_subject_filter(response_dataset(), filter_on_response)
       })
@@ -408,14 +407,14 @@ swimmerplot_server <- function(
       output[[MODULE_IDS$SWIMMER_PLOT]] <- ggiraph::renderGirafe({
         subj_data <- filtered_subject_level()
         n_subjects <- nrow(subj_data)
-
+        
         shiny::validate(
           shiny::need(
             n_subjects > 0, 
             "No data available for swimmer plot. Please check your filters or data source."
           )
         )
-
+        
         if (is.null(plot_height)) {       
           plot_height <- max((n_subjects * 0.3) + 3, 6)
         }
@@ -427,7 +426,7 @@ swimmerplot_server <- function(
         }
         
         response_data <- filtered_response()
-
+        
         x_rng <- input[[MODULE_IDS$X_RNG]]
         x_rng_lower <- NULL
         x_rng_upper <- NULL
@@ -439,7 +438,7 @@ swimmerplot_server <- function(
             x_rng_upper <- x_rng[[2]]
           }
         }
-
+        
         swimmerplot(
           subject_level_dataset = subj_data,
           exposure_dataset = filtered_exposure(),
@@ -459,7 +458,6 @@ swimmerplot_server <- function(
           result_tooltip_vars = result_tooltip_vars,
           trt_annotation_vars = trt_annotation_vars,
           trt_annotation_x = trt_annotation_x,
-          result_annotation_vars = result_annotation_vars,
           result_cat_var = result_cat_var,
           result_legend_label = result_legend_label,
           shape_mapping = shape_mapping,
@@ -474,35 +472,35 @@ swimmerplot_server <- function(
           enable_jumping = !is.null(receiver_id)
         )      
       })
-
+      
       output[["plot_legend"]] <- shiny::renderUI({
         ex <- filtered_exposure()
         rs <- filtered_response()
-
+        
         trt_vals <- character()
         if (!is.null(trt_group_var) && !is.null(ex) && nrow(ex) > 0 && trt_group_var %in% names(ex)) {
           trt_raw <- stats::na.omit(ex[[trt_group_var]])
           trt_vals <- sort(unique(as.character(trt_raw)))
         }
-
+        
         rs_vals <- character()
         if (!is.null(result_cat_var) && !is.null(rs) && nrow(rs) > 0 && result_cat_var %in% names(rs)) {
           rs_raw <- stats::na.omit(rs[[result_cat_var]])
           rs_vals <- sort(unique(as.character(rs_raw)))
         }
-
+        
         if (!is.null(color_palette) && !is.null(names(color_palette))) {
           trt_vals <- trt_vals[trt_vals %in% names(color_palette)]
         }
-
+        
         if (!is.null(shape_mapping) && !is.null(names(shape_mapping))) {
           rs_vals <- rs_vals[rs_vals %in% names(shape_mapping)]
         }
-
+        
         if (length(trt_vals) == 0 && length(rs_vals) == 0) {
           return(NULL)
         }
-
+        
         shape_icon <- function(val, color) {
           pch_val <- suppressWarnings(as.integer(val))
           if (is.na(pch_val)) {
@@ -520,18 +518,18 @@ swimmerplot_server <- function(
           unlink(tmp)
           shiny::HTML(svg)
         }
-
+        
         hue_pal <- function(n) {
           if (n == 0) return(character())
           h <- seq(15, 375, length.out = n + 1)
           grDevices::hcl(h[-(n + 1)], l = 65, c = 100)
         }
-
+        
         shape_pal <- function(n) {
           vals <- c(16, 17, 15, 3, 7, 8)
           rep(vals, length.out = n)
         }
-
+        
         make_item <- function(label, icon, color) {
           shiny::tags$div(
             style = "display:flex;align-items:center;gap:8px;line-height:1.4;",
@@ -546,7 +544,7 @@ swimmerplot_server <- function(
             shiny::tags$span(style = "font-size:13px;", label)
           )
         }
-
+        
         trt_cols <- character()
         if (length(trt_vals) > 0) {
           if (!is.null(color_palette) && !is.null(names(color_palette))) {
@@ -555,7 +553,7 @@ swimmerplot_server <- function(
             trt_cols <- hue_pal(length(trt_vals))
           }
         }
-
+        
         rs_shapes <- character()
         if (length(rs_vals) > 0) {
           if (!is.null(shape_mapping) && !is.null(names(shape_mapping))) {
@@ -564,16 +562,16 @@ swimmerplot_server <- function(
             rs_shapes <- as.character(shape_pal(length(rs_vals)))
           }
         }
-
+        
         trt_items <- lapply(seq_along(trt_vals), function(i) {
           make_item(as.character(trt_vals[[i]]), "■", trt_cols[[i]])
         })
-
+        
         rs_items <- lapply(seq_along(rs_vals), function(i) {
           icon <- shape_icon(rs_shapes[[i]], "#333333")
           make_item(as.character(rs_vals[[i]]), icon, "#333333")
         })
-
+        
         shiny::tags$div(
           if (length(trt_items) > 0) shiny::tags$div(
             shiny::tags$div(style = "font-weight:600;margin:4px 0;", trt_legend_label),
@@ -644,7 +642,6 @@ swimmerplot_server <- function(
 #' @param trt_annotation_vars `[character(n)]` Character vector of variables for fixed text annotation on exposure.
 #' @param trt_annotation_x `[numeric(1)]` X-axis position for a left-aligned fixed exposure annotation column.
 #'   If NULL, the exposure annotation is placed after each exposure bar end.
-#' @param result_annotation_vars `[character(n)]` Character vector of variables for fixed text annotation on response points.
 #' @param result_cat_var `[character(1)]` Name of the variable representing the type of response. 
 #' Only used when response_dataset_name is provided.
 #' @param result_legend_label `[character(1)]` Legend title for the response type. 
@@ -674,40 +671,39 @@ swimmerplot_server <- function(
 #' 
 #' @export
 mod_swimmerplot <- function(
-  module_id,
-  subject_level_dataset_name = "dm",
-  exposure_dataset_name = "ex",
-  response_dataset_name = NULL,
-  subjid_var = "USUBJID",
-  group_by_vars = c("SEX", "RACE"),
-  sort_by_vars = NULL,
-  sort_direction = "asc",
-  trt_start_day_var = "EXSTDY",
-  trt_end_day_var = "EXENDY",
-  trt_ongoing_var = NULL,
-  trt_tooltip_vars = NULL,
-  trt_group_var = "EXTRT",
-  trt_legend_label = NULL,
-  color_palette = NULL,
-  result_study_day_var = NULL,
-  result_tooltip_vars = NULL,
-  trt_annotation_vars = NULL,
-  trt_annotation_x = NULL,
-  result_annotation_vars = NULL,
-  result_cat_var = NULL,
-  result_legend_label = NULL,
-  shape_mapping = NULL,
-  plot_title = NULL,
-  plot_subtitle = NULL,
-  plot_x_label = NULL,
-  plot_y_label = NULL,
-  plot_width = NULL,
-  plot_height = NULL,
-  receiver_id = NULL,
-  filter_data = subject_level_dataset_name,
-  filter_var = "ARM",
-  filter_values = NULL,
-  filter_default_vals = NULL
+    module_id,
+    subject_level_dataset_name = "dm",
+    exposure_dataset_name = "ex",
+    response_dataset_name = NULL,
+    subjid_var = "USUBJID",
+    group_by_vars = c("SEX", "RACE"),
+    sort_by_vars = NULL,
+    sort_direction = "asc",
+    trt_start_day_var = "EXSTDY",
+    trt_end_day_var = "EXENDY",
+    trt_ongoing_var = NULL,
+    trt_tooltip_vars = NULL,
+    trt_group_var = "EXTRT",
+    trt_legend_label = NULL,
+    color_palette = NULL,
+    result_study_day_var = NULL,
+    result_tooltip_vars = NULL,
+    trt_annotation_vars = NULL,
+    trt_annotation_x = NULL,
+    result_cat_var = NULL,
+    result_legend_label = NULL,
+    shape_mapping = NULL,
+    plot_title = NULL,
+    plot_subtitle = NULL,
+    plot_x_label = NULL,
+    plot_y_label = NULL,
+    plot_width = NULL,
+    plot_height = NULL,
+    receiver_id = NULL,
+    filter_data = subject_level_dataset_name,
+    filter_var = "ARM",
+    filter_values = NULL,
+    filter_default_vals = NULL
 ) {
   checkmate::assert_string(module_id)
   checkmate::assert_string(subject_level_dataset_name)
@@ -731,7 +727,6 @@ mod_swimmerplot <- function(
   checkmate::assert_character(result_tooltip_vars, null.ok = TRUE)
   checkmate::assert_character(trt_annotation_vars, null.ok = TRUE)
   checkmate::assert_number(trt_annotation_x, null.ok = TRUE)
-  checkmate::assert_character(result_annotation_vars, null.ok = TRUE)
   checkmate::assert_string(result_cat_var, null.ok = TRUE)
   checkmate::assert_string(result_legend_label, null.ok = TRUE)
   checkmate::assert(
@@ -789,7 +784,7 @@ mod_swimmerplot <- function(
           afmm[["filtered_dataset"]]()[[response_dataset_name]]
         )
       }
-
+      
       filter_dataset <- shiny::reactive({
         data <- afmm[["filtered_dataset"]]()
         if (is.null(filter_data) || is.null(data) || !(filter_data %in% names(data))) {
@@ -797,7 +792,7 @@ mod_swimmerplot <- function(
         }
         data[[filter_data]]
       })
-
+      
       filter_on_exposure <- !is.null(filter_data) && identical(filter_data, exposure_dataset_name)
       filter_on_response <- !is.null(response_dataset_name) && !is.null(filter_data) && 
         identical(filter_data, response_dataset_name)
@@ -819,7 +814,6 @@ mod_swimmerplot <- function(
         result_tooltip_vars = result_tooltip_vars,
         trt_annotation_vars = trt_annotation_vars,
         trt_annotation_x = trt_annotation_x,
-        result_annotation_vars = result_annotation_vars,
         result_cat_var = result_cat_var,
         result_legend_label = result_legend_label,
         shape_mapping = shape_mapping,

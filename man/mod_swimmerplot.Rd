@@ -24,7 +24,6 @@ mod_swimmerplot(
   result_tooltip_vars = NULL,
   trt_annotation_vars = NULL,
   trt_annotation_x = NULL,
-  result_annotation_vars = NULL,
   result_cat_var = NULL,
   result_legend_label = NULL,
   shape_mapping = NULL,
@@ -35,7 +34,9 @@ mod_swimmerplot(
   plot_width = NULL,
   plot_height = NULL,
   receiver_id = NULL,
+  filter_data = subject_level_dataset_name,
   filter_var = "ARM",
+  filter_values = NULL,
   filter_default_vals = NULL
 )
 }
@@ -84,8 +85,6 @@ Only used when response_dataset_name is provided.}
 
 \item{trt_annotation_x}{`[numeric(1)]` X-axis position for a left-aligned fixed exposure annotation column.
 If NULL, the exposure annotation is placed after each exposure bar end.}
-
-\item{result_annotation_vars}{`[character(n)]` Character vector of variables for fixed text annotation on response points.}
 
 \item{result_cat_var}{`[character(1)]` Name of the variable representing the type of response. 
 Only used when response_dataset_name is provided.}
