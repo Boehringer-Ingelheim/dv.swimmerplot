@@ -385,14 +385,17 @@ swimmerplot <- function(
   
   if (!is.null(group_by_vars)) {
     facet_formula <- stats::as.formula(
-      paste("~", paste(group_by_vars, collapse = " + "))
+      paste(paste(group_by_vars, collapse = " + "), "~ .")
     )
     plot_obj <- plot_obj +
-      ggplot2::facet_wrap(
+      ggplot2::facet_grid(
         facet_formula,
         scales = "free_y",
-        ncol = 1,
-        strip.position = "top"
+        space = "free_y",
+        switch = "y"
+      ) +
+      ggplot2::theme(
+        strip.placement = "outside"
       )
   }
   
