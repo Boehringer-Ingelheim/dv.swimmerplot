@@ -384,11 +384,15 @@ swimmerplot <- function(
   }
   
   if (!is.null(group_by_vars)) {
-    plot_obj <- plot_obj + 
-      ggforce::facet_col(
-        facets = group_by_vars, 
-        scales = "free_y", 
-        space = "free"
+    facet_formula <- stats::as.formula(
+      paste("~", paste(group_by_vars, collapse = " + "))
+    )
+    plot_obj <- plot_obj +
+      ggplot2::facet_wrap(
+        facet_formula,
+        scales = "free_y",
+        ncol = 1,
+        strip.position = "top"
       )
   }
   

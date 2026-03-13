@@ -26,7 +26,6 @@ Depends: R (>= 4.1.0)
 Imports:
     checkmate,
     dplyr,
-    ggforce,
     ggiraph,
     ggplot2,
     rlang,

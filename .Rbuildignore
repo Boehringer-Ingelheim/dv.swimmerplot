@@ -11,3 +11,4 @@ workflows.md
 ^.lintr$
 .gitempty
 ^\.lintr\.R$
+^docs$
