@@ -49,7 +49,7 @@ swimmerplot_server(
 
 \item{exposure_dataset}{`[reactive(data.frame)]` Dataset containing treatment exposure records.}
 
-\item{response_dataset}{`[reactive(data.frame)]` Dataset containing response/event records. Optional - 
+\item{response_dataset}{`[reactive(data.frame)]` Dataset containing response/event records. Optional -
 can be a reactive that returns NULL to create a plot without response data.}
 
 \item{subjid_var}{`[character(1)]` Name of the variable representing subject ID.}
@@ -108,12 +108,20 @@ If NULL, height will be calculated automatically based on the number of subjects
 
 \item{sort_direction}{`[character(1)]` Direction to sort ("asc" for ascending, "desc" for descending).}
 
-\item{receiver_id}{`[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID). 
+\item{receiver_id}{`[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID).
 Set to NULL to disable the communication functionality.}
 
 \item{afmm}{`[list]` Arguments from Module Manager containing datasets, utilities and module communication channels.}
 
+\item{filter_dataset}{`[reactive(data.frame)]` Reactive data frame used to populate the filter control.}
+
+\item{filter_on_exposure}{`[logical(1)]` Whether to apply the selected filter to the exposure dataset.}
+
+\item{filter_on_response}{`[logical(1)]` Whether to apply the selected filter to the response dataset.}
+
 \item{filter_var}{`[character(1)]` Name of the variable to use for filtering subjects.}
+
+\item{filter_values}{`[character(n)]` Character vector restricting the available filter choices.}
 
 \item{filter_default_vals}{`[character(n)]` Default selected values for the filter variable upon initialization.}
 }

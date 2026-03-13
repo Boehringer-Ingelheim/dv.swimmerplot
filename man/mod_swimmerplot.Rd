@@ -108,10 +108,14 @@ Only used when response_dataset_name is provided.}
 \item{plot_height}{`[numeric(1)]` Height of the plot in inches. 
 If NULL, height will be calculated automatically based on the number of subjects.}
 
-\item{receiver_id}{`[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID). 
+\item{receiver_id}{`[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID).
 Set to NULL to disable the communication functionality.}
 
+\item{filter_data}{`[character(1)]` Name of the dataset to use for populating the filter control.}
+
 \item{filter_var}{`[character(1)]` Name of the variable to use for filtering subjects.}
+
+\item{filter_values}{`[character(n)]` Character vector restricting the available filter choices.}
 
 \item{filter_default_vals}{`[character(n)]` Default selected values for the filter variable upon initialization.}
 }

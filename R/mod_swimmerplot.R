@@ -173,10 +173,14 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
 #' @inheritParams mod_swimmerplot
 #' @param subject_level_dataset `[reactive(data.frame)]` Subject-level dataset containing baseline information.
 #' @param exposure_dataset `[reactive(data.frame)]` Dataset containing treatment exposure records.
-#' @param response_dataset `[reactive(data.frame)]` Dataset containing response/event records. Optional - 
+#' @param response_dataset `[reactive(data.frame)]` Dataset containing response/event records. Optional -
 #' can be a reactive that returns NULL to create a plot without response data.
 #' @param afmm `[list]` Arguments from Module Manager containing datasets, utilities and module communication channels.
+#' @param filter_dataset `[reactive(data.frame)]` Reactive data frame used to populate the filter control.
+#' @param filter_on_exposure `[logical(1)]` Whether to apply the selected filter to the exposure dataset.
+#' @param filter_on_response `[logical(1)]` Whether to apply the selected filter to the response dataset.
 #' @param filter_var `[character(1)]` Name of the variable to use for filtering subjects.
+#' @param filter_values `[character(n)]` Character vector restricting the available filter choices.
 #' @param filter_default_vals `[character(n)]` Default selected values for the filter variable upon initialization.
 #'
 #' @seealso [mod_swimmerplot()] and [swimmerplot_UI()]
@@ -564,7 +568,7 @@ swimmerplot_server <- function(
         }
         
         trt_items <- lapply(seq_along(trt_vals), function(i) {
-          make_item(as.character(trt_vals[[i]]), "■", trt_cols[[i]])
+          make_item(as.character(trt_vals[[i]]), "\u25a0", trt_cols[[i]])
         })
         
         rs_items <- lapply(seq_along(rs_vals), function(i) {
@@ -655,9 +659,11 @@ swimmerplot_server <- function(
 #' @param plot_width `[numeric(1)]` Width of the plot in inches.
 #' @param plot_height `[numeric(1)]` Height of the plot in inches. 
 #' If NULL, height will be calculated automatically based on the number of subjects.
-#' @param receiver_id `[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID). 
+#' @param receiver_id `[character(1)]` ID of the module to communicate with (e.g., Patient Profile module ID).
 #' Set to NULL to disable the communication functionality.
+#' @param filter_data `[character(1)]` Name of the dataset to use for populating the filter control.
 #' @param filter_var `[character(1)]` Name of the variable to use for filtering subjects.
+#' @param filter_values `[character(n)]` Character vector restricting the available filter choices.
 #' @param filter_default_vals `[character(n)]` Default selected values for the filter variable upon initialization.
 #'
 #' @return A list composed of the following elements:
