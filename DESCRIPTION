@@ -30,7 +30,8 @@ Imports:
     ggiraph,
     ggplot2,
     rlang,
-    shiny
+    shiny,
+    shinyWidgets
 Suggests:
     dv.manager,
     jsonlite,
@@ -43,4 +44,4 @@ Suggests:
     xml2
 Remotes: boehringer-ingelheim/dv.manager@main
 VignetteBuilder: knitr
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
