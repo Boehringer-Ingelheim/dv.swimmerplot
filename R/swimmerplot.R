@@ -387,14 +387,24 @@ swimmerplot <- function(
     facet_formula <- stats::as.formula(
       paste(paste(group_by_vars, collapse = " + "), "~ .")
     )
+    facet_labellers <- stats::setNames(
+      lapply(group_by_vars, function(v) {
+        ggiraph::labeller_interactive(ggplot2::aes(
+          tooltip = paste0(v, ": ", .data[[v]]),
+          data_id = paste0(v, "_", .data[[v]])
+        ))
+      }),
+      group_by_vars
+    )
     plot_obj <- plot_obj +
-      ggplot2::facet_grid(
+      ggiraph::facet_grid_interactive(
         facet_formula,
         scales = "free_y",
         space = "free_y",
-        switch = "y"
+        labeller = do.call(ggplot2::labeller, facet_labellers)
       ) +
       ggplot2::theme(
+        strip.text.y = ggiraph::element_text_interactive(),
         strip.placement = "outside"
       )
   }
