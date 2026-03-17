@@ -1,0 +1,120 @@
+# Communication with DaVinci modules
+
+The Swimmer Plot module is capable of communicating with other DaVinci
+modules like the Patient Profile module from the
+[{dv.papo}](https://boehringer-ingelheim.github.io/dv.papo/) package.
+Communication in this sense means that the Swimmer Plot module sends out
+a subject ID which can be received and further processed by other
+modules. At the same moment, the tab of a DaVinci app switches to the
+receiver module.
+
+The communication feature is optional and can be activated on the
+Swimmer Plot module side as follows. Note that there might be also
+activation needed on the counter module side (e.g., Patient Profile
+module side).
+
+## Activate communication within Swimmer Plot module
+
+As a default, the `receiver_id` parameter in the
+[`mod_swimmerplot()`](https://boehringer-ingelheim.github.io/dv.swimmerplot/reference/mod_swimmerplot.md)
+call of your module list definition is set to `NULL`, which means that
+the communication functionality is disabled. To enable switching to
+another DaVinci module, set `receiver_id` to the module ID of your
+counterpart module.
+
+## Example
+
+Example code of a module list definition to turn the communication
+feature on between a Swimmer Plot and a Patient Profile module:
+
+``` r
+
+dm <- pharmaversesdtm::dm |>
+  dplyr::select(USUBJID, AGE, SEX, RACE, ARM, RFSTDTC, RFENDTC) |> 
+  dplyr::filter(ARM != "Screen Failure")
+
+ex <- dplyr::left_join(x = pharmaversesdtm::ex, y = dm, by = "USUBJID") |>
+  dplyr::mutate(
+    ex_ongoing = is.na(EXENDY),
+    ex_end = ifelse(ex_ongoing, EXSTDY + 10, EXENDY) # For ongoing treatments
+  )
+
+rs <- dplyr::left_join(x = pharmaversesdtm::rs_onco, y = dm, by = "USUBJID") |>
+  dplyr::filter(RSTEST == "Overall Response") |>
+  dplyr::filter(RSEVAL == "INVESTIGATOR") |>
+  dplyr::filter(!is.na(RSDY))
+
+data_list <- list(dm = dm, ex = ex, rs = rs)
+
+module_list <- list(
+  "Swimmer Plot" = dv.swimmerplot::mod_swimmerplot(
+    module_id = "swimmer1",
+    subject_level_dataset_name = "dm",
+    exposure_dataset_name = "ex",
+    response_dataset_name = "rs",
+    subjid_var = "USUBJID",
+    group_by_vars = c("SEX", "RACE", "ARM"),
+    sort_by_vars = c("AGE", "USUBJID"),
+    sort_direction = "asc",
+    trt_start_day_var = "EXSTDY",
+    trt_end_day_var = "ex_end",
+    trt_ongoing_var = "ex_ongoing",
+    trt_tooltip_vars = c(
+      "Subject ID: " = "USUBJID",
+      "Exposure: " = "EXTRT",
+      "Start Day: " = "EXSTDY",
+      "End Day: " = "EXENDY"
+    ),
+    trt_group_var = "EXTRT",
+    trt_legend_label = "Treatment",
+    result_study_day_var = "RSDY",
+    result_tooltip_vars = c(
+      "Subject ID: " = "USUBJID",
+      "Study Day: " = "RSDY",
+      "Response: " = "RSORRES"
+    ),
+    result_cat_var = "RSORRES",
+    result_legend_label = "Response",
+    plot_title = "Subject Treatment and Response",
+    plot_x_label = "Study Day",
+    plot_y_label = "Subject ID",
+    plot_width = 10,
+    receiver_id = "papo1"
+  ),
+  "Patient Profile" = dv.papo::mod_patient_profile(
+    module_id = "papo1",
+    subject_level_dataset_name = "dm",
+    subjid_var = "USUBJID",
+    summary = list(
+      vars = c("USUBJID", "AGE", "SEX", "RACE", "ARM"),
+      column_count = 3L
+    ),
+    listings = list(
+      "Exposure" = list(
+        dataset = "ex",
+        default_vars = c("EXSTDY", "EXENDY", "EXTRT", "EXDOSE", "EXDOSU")
+      ),
+      "Response" = list(
+        dataset = "rs",
+        default_vars = c("RSDY", "RSORRES", "RSTEST")
+      )
+    ),
+    sender_ids = "swimmer1"
+  )
+)
+
+dv.manager::run_app(
+  data = list("Study Data" = data_list),
+  module_list = module_list,
+  filter_data = "dm",
+  filter_key = "USUBJID"
+)
+```
+
+For more information about module communication in DaVinci apps, see the
+[`dv.manager`
+documentation](https://boehringer-ingelheim.github.io/dv.manager/articles/passing_data.html).
+
+For details on how to configure the Patient Profile module to receive
+communication, see the [`dv.papo` documentation on
+communication](https://boehringer-ingelheim.github.io/dv.papo/articles/a02-communication.html).
