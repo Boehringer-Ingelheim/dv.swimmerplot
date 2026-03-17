@@ -1,3 +1,5 @@
+^renv$
+^renv\.lock$
 ^dv.templates\.Rproj$
 ^\.Rproj\.user$
 ^.*\.Rproj$
@@ -8,3 +10,5 @@ _pkgdown.yml
 workflows.md
 ^.lintr$
 .gitempty
+^\.lintr\.R$
+^docs$

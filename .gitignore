@@ -1,2 +1,5 @@
 .Rproj.user
+.Rprofile
 docs/
+renv/
+renv.lock
