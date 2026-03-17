@@ -1,4 +1,4 @@
-# dv.swimmerplot 1.1.0-9000
+# dv.swimmerplot 1.2.0
 
 - Added local filtering support.
 - Added support for text annotations.
