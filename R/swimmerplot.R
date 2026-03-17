@@ -130,7 +130,7 @@ swimmerplot <- function(
   checkmate::assert_character(plot_subtitle, len = 1, null.ok = TRUE)
   checkmate::assert_character(plot_x_label, len = 1)
   checkmate::assert_character(plot_y_label, len = 1)
-  checkmate::assert_numeric(plot_width, len = 1)
+  checkmate::assert_numeric(plot_width, len = 1, null.ok = TRUE)
   checkmate::assert_numeric(plot_height, len = 1)
   checkmate::assert_numeric(x_rng_lower, len = 1, null.ok = TRUE)
   checkmate::assert_numeric(x_rng_upper, len = 1, null.ok = TRUE)
