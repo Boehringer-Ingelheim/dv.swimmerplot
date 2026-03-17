@@ -1,0 +1,140 @@
+---
+name: Pkgdown
+
+on:
+  workflow_call:
+
+concurrency:
+  group: pkgdown-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEMPLATE_REF: main
+  TEMPLATE_REPO: boehringer-ingelheim/dv.templates
+
+jobs:
+  pkgdown:
+    name: ${{ vars.CI_IMAGE }}
+    runs-on: ubuntu-22.04
+    container:
+      image: ${{ vars.CI_IMAGE }}    
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout project ⬇️
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #@v4
+
+      - name: Checkout templates repo ⬇️  
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #@v4
+        with:
+          ref: ${{env.TEMPLATE_REF}}
+          repository: ${{env.TEMPLATE_REPO}}
+          sparse-checkout: |
+            scripts/
+            inst/validation
+          path: templates
+
+      - name: Overwrite quality control scripts with those on dv.templates
+        shell: bash
+        run: |
+          TEMPLATE_DIR="templates/inst/validation"
+          REPO_DIR="inst/validation"
+
+          if test ! -d "${REPO_DIR}"; then
+            echo "### Quality Control documentation is not present"
+            echo "### Include quality control documentation or skip it by creating following file 'inst/validation/skip_qc'"
+            exit 1
+          fi
+
+          if test -f "${REPO_DIR}/skip_qc"; then
+            echo "skip_qc file found skipping qc documentation"
+            exit 0
+          fi
+          
+          # Conserve specs.R file
+          cp "${REPO_DIR}/specs.R" "${TEMPLATE_DIR}/specs.R"
+
+          set +e  # Disable immediate exit in conflicting parts on error for diff command
+          DIFF_OUTPUT=$(diff -qr "${TEMPLATE_DIR}" "${REPO_DIR}")
+          set -e  # Enable immediate exit on error after diff command
+
+          echo "# Quality control files" | tee -a "${GITHUB_STEP_SUMMARY}"
+          
+          if [ -n "${DIFF_OUTPUT}" ]; then
+            echo "Warning: The contents of the directories are different!" | tee -a "${GITHUB_STEP_SUMMARY}"
+            echo "Modified files:" | tee -a "${GITHUB_STEP_SUMMARY}"
+            echo "$DIFF_OUTPUT" | tee -a "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "The directories are identical." | tee -a "${GITHUB_STEP_SUMMARY}"
+          fi
+
+          rm -rf "${REPO_DIR}"
+          mv "${TEMPLATE_DIR}" "${REPO_DIR}"
+
+      - name: Install package dependencies
+        uses: boehringer-ingelheim/dv.templates/.github/actions/dependencies@main
+
+      - name: Get validation results
+        uses: actions/download-artifact@v4
+        with:
+          name: val_results
+          path: inst/validation/results
+
+      - name: Build site
+        run: |
+          # Pay the hadley tax: https://github.com/r-lib/roxygen2/issues/905
+          desc <- read.dcf("DESCRIPTION")
+          desc <- desc[, setdiff(colnames(desc), "RoxygenNote"), drop=FALSE]
+          write.dcf(x = desc, file = "DESCRIPTION")
+          # Generate docs
+          rox_messages <- capture.output(roxygen2::roxygenize(clean = TRUE), type = "message")
+          message(paste(rox_messages, collapse = '\n'))
+          error_mask <- startsWith(rox_messages, '✖')
+          if(any(error_mask)) {
+            stop(paste("Errors while rendering roxygen documentation:", paste(rox_messages[error_mask], collapse = "\n")))
+          }
+          # Render site
+          pkgdown::build_site(new_process = FALSE) # otherwise errors are not logged
+        shell: Rscript {0}
+
+      - name: Remove Quality Control vignette from Articles dropdown
+        run: |
+          # This removal is highly dependent on the pkgdown template, but we've tried to make the regexp patterns
+          # fairly restrictive to prevent deletions from happening if the template changes. If that were to happen, 
+          # the QC vignette would reappear under Articles, which is annoying, but not the end of the world.
+
+          # For reference, see https://regex101.com/ and https://stackoverflow.com/a/56927135
+          PATTERN_QC_ITEM='^\s*<a class="dropdown-item" href=".*/qc.html">.*</a>\s*$'
+          PATTERN_DROPDOWN_WITH_ITEMS='(?s)<li class=\"(active )?nav-item dropdown\">.*?(?:<\/li>(*SKIP)(*FAIL)|.)dropdown-articles.*?dropdown-item.*?<\/li>'
+          PATTERN_DROPDOWN_WITHOUT_ITEMS='(?s)<li class=\"(active )?nav-item dropdown\">.*?(?:<\/li>(*SKIP)(*FAIL)|.)dropdown-articles.*?<\/li>'
+
+          readarray -t FILES < <(find docs -name "*.html" -print0 | xargs -0 grep -l "$PATTERN_QC_ITEM")
+          for f in "${FILES[@]}"; do
+            sed -i "\#$PATTERN_QC_ITEM#d" "$f"
+            grep -Pzoq "$PATTERN_DROPDOWN_WITH_ITEMS" "$f"
+            if [ $? -ne 0 ]; then
+              perl -0 -i -p -e "s/$PATTERN_DROPDOWN_WITHOUT_ITEMS//gs" "$f"
+            fi
+          done
+        shell: bash
+
+      - name: Check URLs 🌐
+        run: |
+          lychee . --format markdown --verbose --no-progress --exclude "https://boehringer-ingelheim.github.io*" >> $GITHUB_STEP_SUMMARY
+        shell: bash
+
+      - name: Checkout gh-pages branch ⬇️
+        if: github.ref_name == 'main'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #@v4
+        with:
+          path: gh-pages
+          ref: gh-pages
+
+      - name: Deploy to GitHub pages
+        if: github.ref_name == 'main'
+        uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0 but immutable
+        with:
+          clean: true
+          branch: gh-pages
+          folder: docs

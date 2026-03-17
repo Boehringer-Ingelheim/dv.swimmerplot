@@ -1,0 +1,55 @@
+---
+name: Release
+
+on:
+  workflow_call:
+
+concurrency:
+  group: release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  create-release:
+    name: ${{ vars.CI_IMAGE }}
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #@v4
+
+      - name: NEWS.md and DESCRIPTION version check
+        run: |
+          DEBUG=0
+          
+          TARGET_BRANCH=${GITHUB_BASE_REF} # specific to pull requests
+          if [ -z "${TARGET_BRANCH}" ]; then 
+            TARGET_BRANCH=${GITHUB_REF_NAME} # generic for all workflows
+          fi
+
+          DESC_VERSION=$(awk -F: '/^Version:/{gsub(/[ ]+/,"") ; print $2; exit}' DESCRIPTION)
+          NEWS_VERSION=$(awk '/^#/{print $3; exit}' NEWS.md)
+          VERSION_COMPONENT_COUNT=$(echo $DESC_VERSION | awk -F . '{ print NF }')
+
+          if [ $DEBUG -eq 1 ]; then
+            echo "DESCRIPTION VERSION: $DESC_VERSION"
+            echo "NEWS.md VERSION: $NEWS_VERSION"
+            echo "Version component count: $VERSION_COMPONENT_COUNT"
+            echo "Target branch: $TARGET_BRANCH"
+          fi
+
+          RESULT=0
+          if [ "$DESC_VERSION" = "$NEWS_VERSION" ]; then 
+            echo "✅ Versions on NEWS.md and DESCRIPTION match ($DESC_VERSION)."
+          else
+            echo "❌ Versions on NEWS.md and DESCRIPTION do not match ($NEWS_VERSION vs $DESC_VERSION)."
+            RESULT=1
+          fi
+
+          # we check the target branch inside the script (as opposed to in GH actions) to facilitate future merging of actions
+          if [ "$TARGET_BRANCH" = "main" ] && [ $VERSION_COMPONENT_COUNT -ge 4 ]; then
+            echo "❌ Version on DESCRIPTION has more than three components (X.X.X) and is targeting the 'main' branch."
+            RESULT=1
+          fi
+
+          exit $RESULT
+        shell: bash

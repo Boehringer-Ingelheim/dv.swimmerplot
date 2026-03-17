@@ -1,0 +1,18 @@
+---
+name: Dependencies 
+
+runs:
+  using: 'composite'
+  steps: 
+    - name: Install package dependencies 📄
+      run: |
+        # Otherwise it installs system libraries automatically
+        old_sysreqs_option <- getOption("pkg.sysreqs")
+        options(pkg.sysreqs = FALSE)
+        on.exit(options("pkg.sysreqs" = old_sysreqs_option), add = TRUE)        
+        pak::local_install_deps(".", upgrade=FALSE, ask=FALSE, dependencies = TRUE)
+        message("Message complaining about `chromium` not being installed is normal and initially can be ignored")
+        chromote::chromote_info()
+      shell: Rscript {0}
+
+

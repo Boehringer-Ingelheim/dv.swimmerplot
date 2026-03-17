@@ -1,0 +1,41 @@
+---
+name: Lintr 🔍
+
+on:
+  workflow_call:
+    inputs:
+      lintr_error_on_lint:
+        description: Raise lintr error when lints found.
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lintr:
+    name: ${{ vars.CI_IMAGE }}
+    runs-on: ubuntu-22.04
+    container:
+      image: ${{ vars.CI_IMAGE }}    
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout project ⬇️
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #@v4
+
+      - name: Install package dependencies 📄
+        uses: boehringer-ingelheim/dv.templates/.github/actions/dependencies@main     
+
+      - name: Import .lintr
+        run: |
+          wget -O .lintr https://raw.githubusercontent.com/boehringer-ingelheim/dv.templates/main/.lintr
+
+      - name: Lintr 🔍
+        run: lintr::lint_package()
+        shell: Rscript {0}
+        env:
+          LINTR_ERROR_ON_LINT: ${{ inputs.lintr_error_on_lint }}

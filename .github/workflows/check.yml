@@ -1,0 +1,33 @@
+---
+name: Check 📦
+
+on:
+  workflow_call:
+
+concurrency:
+  group: check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ vars.CI_IMAGE }}
+    runs-on: ubuntu-22.04
+    container:
+      image: ${{ vars.CI_IMAGE }}    
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout project ⬇️
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #@v4
+
+      - name: Install package dependencies 📄
+        uses: boehringer-ingelheim/dv.templates/.github/actions/dependencies@main     
+
+      - name: Check 📦
+        run: |
+          options(crayon.enabled = TRUE)
+          rcmdcheck::rcmdcheck(error_on = "error", args = "--no-tests")
+        shell: Rscript {0}
+
+

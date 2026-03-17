@@ -4,8 +4,10 @@ test_that(
       app_path <- testthat::test_path("apps", "mock_swimmerplot_mm")
       app <- shinytest2::AppDriver$new(app_dir = app_path, name = "mock_swimmerplot_mm")
       
-      app$set_inputs(`global_filter-vars` = "SEX")
-      app$set_inputs(`global_filter-SEX` = "M")
+      app$wait_for_idle()
+      dataset_list_name <- app$get_value(input = "selector")
+      filter_json <- sprintf('{"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[{"kind":"row_operation","operation":"and","children":[{"kind":"filter","dataset":"dm","operation":"select_subset","variable":"SEX","values":["M"],"include_NA":false}]}]}},"dataset_list_name":"%s"}', dataset_list_name)
+      app$run_js(sprintf("dv_filter.request_dataset_filter_state({id:\"filter\", state:`%s`})", filter_json))
       app$wait_for_idle(duration = 1000)
 
       plot_output <- app$get_value(output = "swimmer1-swimmer_plot")
