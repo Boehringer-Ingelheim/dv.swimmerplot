@@ -47,21 +47,25 @@ Use `color_palette` to assign specific colors to exposure groups. Supply a **nam
 
 ```{r color-palette}
 mod_swimmerplot(
-  module_id                = "swimmer_colors",
+  module_id                  = "swimmer_colors",
   subject_level_dataset_name = "dm",
-  exposure_dataset_name    = "ex",
-  response_dataset_name    = "rs",
-  subjid_var               = "USUBJID",
-  trt_start_day_var        = "EXSTDY",
-  trt_end_day_var          = "ex_end",
-  trt_group_var            = "ex_trt",
-  trt_ongoing_var          = "ex_ongoing",
-  result_study_day_var     = "RSDY",
-  result_cat_var           = "RSORRES",
+  exposure_dataset_name      = "ex",
+  response_dataset_name      = "rs",
+  subjid_var                 = "USUBJID",
+  trt_start_day_var          = "EXSTDY",
+  trt_end_day_var            = "ex_end",
+  trt_group_var              = "ex_trt",
+  trt_ongoing_var            = "ex_ongoing",
+  trt_legend_label           = "Treatment",
+  result_study_day_var       = "RSDY",
+  result_cat_var             = "RSORRES",
+  result_legend_label        = "Response",
+  plot_x_label               = "Study Day",
+  plot_y_label               = "Subject",
   color_palette = c(
-    "PLACEBO 0 mg"       = "#AAAAAA",   # grey for placebo
-    "XANOMELINE 54 mg"   = "#4E79A7",   # blue
-    "XANOMELINE 81 mg"   = "#F28E2B"    # orange
+    "PLACEBO 0 mg"     = "#AAAAAA",
+    "XANOMELINE 54 mg" = "#4E79A7",
+    "XANOMELINE 81 mg" = "#F28E2B"
   )
 )
 ```
@@ -84,15 +88,19 @@ mod_swimmerplot(
   trt_start_day_var        = "EXSTDY",
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
+  trt_legend_label         = "Treatment",  
   trt_ongoing_var          = "ex_ongoing",
   result_study_day_var     = "RSDY",
-  result_cat_var           = "RSORRES",
+  result_cat_var           = "RSORRES",  
+  result_legend_label      = "Response",
   shape_mapping = c(
     "CR" = 16,   # filled circle  — Complete Response
     "PR" = 17,   # filled triangle — Partial Response
     "SD" = 15,   # filled square  — Stable Disease
     "PD" = 18    # filled diamond — Progressive Disease
-  )
+  ),
+  plot_x_label = "Study Day",
+  plot_y_label = "Subject"  
 )
 ```
 
@@ -119,8 +127,12 @@ mod_swimmerplot(
     "Start Day: " = "EXSTDY",
     "End Day: "   = "EXENDY"
   ),
+  trt_legend_label = "Treatment",
   result_study_day_var = "RSDY",
-  result_cat_var       = "RSORRES",
+  result_cat_var = "RSORRES",
+  result_legend_label = "Response",
+  plot_x_label = "Study Day",
+  plot_y_label = "Subject",
   result_tooltip_vars = c(
     "Subject: "   = "USUBJID",
     "Study Day: " = "RSDY",
@@ -138,7 +150,6 @@ Omit `trt_tooltip_vars` or `result_tooltip_vars` (or set them to `NULL`) to disa
 `trt_annotation_vars` adds text labels directly on the plot, next to the end of each subject's last exposure bar. This is useful for annotating treatment summaries or end-of-study status.
 
 ```{r annotations-trailing}
-# Annotation placed at the end of each subject's last exposure bar (default)
 mod_swimmerplot(
   module_id                = "swimmer_annot_trail",
   subject_level_dataset_name = "dm",
@@ -148,6 +159,12 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
+  result_study_day_var = "RSDY",
+  result_cat_var = "RSORRES",
+  result_legend_label = "Response",  
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   trt_annotation_vars      = c("ARM"),   # column(s) to concatenate as annotation text
   trt_annotation_x         = NULL        # NULL = place annotation after bar end
 )
@@ -165,6 +182,9 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   trt_annotation_vars      = c("ARM"),
   trt_annotation_x         = 200  # fixed x position for all annotation labels
 )
@@ -186,6 +206,9 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   sort_by_vars             = c("ARM", "AGE"),  # primary sort: ARM, secondary: AGE
   sort_direction           = "desc"            # "asc" or "desc"
 )
@@ -209,6 +232,9 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   group_by_vars            = c("SEX", "RACE")  # facet by sex and race
 )
 ```
@@ -232,8 +258,12 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
   result_study_day_var     = "RSDY",
   result_cat_var           = "RSORRES",
+  result_legend_label      = "Response",
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   filter_var               = "ARM",       # variable to filter on
   filter_values            = c("Xanomeline High Dose", "Xanomeline Low Dose")
 )
@@ -254,8 +284,12 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
   result_study_day_var     = "RSDY",
   result_cat_var           = "RSORRES",
+  result_legend_label      = "Response",
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   filter_data              = "rs",           # draw filter choices from rs
   filter_var               = "RSORRES",      # filter variable in rs
   filter_values            = c("CR", "SD"),  # restrict available choices
@@ -303,6 +337,9 @@ mod_swimmerplot(
   trt_end_day_var          = "ex_end",
   trt_group_var            = "ex_trt",
   trt_ongoing_var          = "ex_ongoing",
+  trt_legend_label         = "Treatment",
+  plot_x_label             = "Study Day",
+  plot_y_label             = "Subject",
   plot_width               = 14,   # width in inches
   plot_height              = NULL  # auto-calculated from subject count
 )
