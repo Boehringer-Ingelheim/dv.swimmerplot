@@ -177,6 +177,7 @@ mod_swimmerplot(
   result_legend_label        = "Response",
   plot_x_label               = "Study Day",
   plot_y_label               = "Subject",
+  plot_width                 = 10,
   trt_annotation_vars        = c("ARM"),  # column(s) to concatenate as annotation text
   trt_annotation_x           = NULL       # NULL = place annotation after bar end
 )
@@ -201,6 +202,7 @@ mod_swimmerplot(
   result_legend_label        = "Response",
   plot_x_label               = "Study Day",
   plot_y_label               = "Subject",
+  plot_width                 = 10,
   trt_annotation_vars        = c("ARM"),
   trt_annotation_x           = 200  # fixed x position for all annotation labels
 )
