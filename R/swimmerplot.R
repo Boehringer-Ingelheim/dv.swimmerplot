@@ -383,9 +383,9 @@ swimmerplot <- function(
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "top", legend.box = "vertical")
   
-  if (is.null(group_by_vars)) {
-    plot_obj <- plot_obj + ggplot2::scale_y_discrete(limits = y_limits)
-  }
+  plot_obj <- plot_obj + ggplot2::scale_y_discrete(
+    limits = function(x) y_limits[y_limits %in% x]
+  )
   
   if (!is.null(group_by_vars)) {
     facet_formula <- stats::as.formula(
