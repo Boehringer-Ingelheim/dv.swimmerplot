@@ -11,5 +11,6 @@ specs <- list(
   jumping_configuration = "Plot supports subject jumping when enabled for module navigation",
   davinci_integration = "Module integrates with DaVinci framework and AFMM structure",
   app_functionality = "Interactive app demonstrates functionality with dynamic controls and plot updates",
-  mm_integration = "Module integrates with DaVinci Module Manager and global filtering"
+  mm_integration = "Module integrates with DaVinci Module Manager and global filtering",
+  sort_direction = "Subject order respects sort_direction: ascending and descending produce correct orderings"
 )
