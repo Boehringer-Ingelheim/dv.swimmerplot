@@ -1,3 +1,7 @@
+# dv.swimmerplot 1.2.0-9000
+
+- Fixed incorrect sorting direction when subjects are grouped
+
 # dv.swimmerplot 1.2.0
 
 - Added local filtering support.
