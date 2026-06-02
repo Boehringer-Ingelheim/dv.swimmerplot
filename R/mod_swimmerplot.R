@@ -160,7 +160,10 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     legend_script
   )
   
-  shiny::tagList(div_content)
+  shiny::tagList(
+    gdtools::liberationsansHtmlDependency(),
+    div_content
+  )
 }
 
 #' Swimmer Plot Module server
@@ -265,6 +268,8 @@ swimmerplot_server <- function(
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      gdtools::register_liberationsans()
+      
       selected_subject <- shiny::reactiveVal(NULL)
       filter_initialized <- shiny::reactiveVal(FALSE)
       
