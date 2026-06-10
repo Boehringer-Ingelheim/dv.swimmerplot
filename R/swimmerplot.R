@@ -380,7 +380,7 @@ swimmerplot <- function(
       color = ggplot2::guide_legend(order = 1),
       shape = ggplot2::guide_legend(order = 2)
     ) +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_minimal(base_family = "Liberation Sans", base_size = 9) +    
     ggplot2::theme(legend.position = "top", legend.box = "vertical")
   
   plot_obj <- plot_obj + ggplot2::scale_y_discrete(
