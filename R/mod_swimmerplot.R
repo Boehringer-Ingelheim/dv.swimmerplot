@@ -142,7 +142,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
   
   div_content <- shiny::tags$div(
     id = scroll_id,
-    style = "height: 100%; overflow-y: auto;",
+    style = "overflow-y: auto;",
     shiny::tags$div(
       style = "position: sticky; top: 0; z-index: 1000; background: #fff;",
       drop_menu,
@@ -155,7 +155,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     ggiraph::girafeOutput(
       outputId = ns(MODULE_IDS$SWIMMER_PLOT),
       width = "100%",
-      height = NULL
+      height = "100%"
     ),
     legend_script
   )
