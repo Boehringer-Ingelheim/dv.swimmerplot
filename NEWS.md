@@ -1,3 +1,8 @@
+# dv.swimmerplot 1.2.0-9001
+
+- Changed the font of plot to Liberation Sans
+- Adjusted plot height to ensure full-width display
+
 # dv.swimmerplot 1.2.0-9000
 
 - Fixed incorrect sorting direction when subjects are grouped

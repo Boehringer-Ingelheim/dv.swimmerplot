@@ -142,7 +142,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
   
   div_content <- shiny::tags$div(
     id = scroll_id,
-    style = "height: 100%; overflow-y: auto;",
+    style = "overflow-y: auto;",
     shiny::tags$div(
       style = "position: sticky; top: 0; z-index: 1000; background: #fff;",
       drop_menu,
@@ -155,12 +155,15 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     ggiraph::girafeOutput(
       outputId = ns(MODULE_IDS$SWIMMER_PLOT),
       width = "100%",
-      height = NULL
+      height = "100%"
     ),
     legend_script
   )
   
-  shiny::tagList(div_content)
+  shiny::tagList(
+    gdtools::liberationsansHtmlDependency(),
+    div_content
+  )
 }
 
 #' Swimmer Plot Module server
@@ -265,6 +268,8 @@ swimmerplot_server <- function(
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      gdtools::register_liberationsans()
+      
       selected_subject <- shiny::reactiveVal(NULL)
       filter_initialized <- shiny::reactiveVal(FALSE)
       

@@ -1,10 +1,10 @@
 # Critical checks
 
-- [ ] Is the test version number correct (x.x.x-9000)? 
+- [ ] Is the version number correct?
 
-- [ ] DESCRIPTION file
+  - [ ] DESCRIPTION file
 
-- [ ] NEWS.md
+  - [ ] [NEWS.md](http://news.md/)
 
 - [ ] Does the build pass?
 
@@ -15,6 +15,7 @@
 Does it include the following sections?
 
 - [ ] Module introduction with features
+
   - [ ] (O) Screenshots
 
 - [ ] Installation details
@@ -25,7 +26,8 @@ Does it include the following sections?
 
 - [ ] Different possible visualizations
 
-- [ ] Are the changes/new features included in NEWS.md?
+-  [ ] Are the changes/new features included in [NEWS.md?](http://news.md/)
+
   - [ ] (O) Screenshots
 
 - [ ] (O) Explanation of input menus
@@ -36,9 +38,7 @@ Does it include the following sections?
 
 ## QC Report
 
-- [ ] Does it include a QC Report with positive outcome?
-
-- [ ] Are the new features reflected accordingly in the specs?
+- [ ] Does it include a QC Report?
 
 ---
 
