@@ -1,3 +1,7 @@
+# dv.swimmerplot 1.2.0-9002
+
+- Updated module to return dataset names for dv.manager filters
+
 # dv.swimmerplot 1.2.0-9001
 
 - Changed the font of plot to Liberation Sans
