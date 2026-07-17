@@ -1,14 +1,8 @@
-# dv.swimmerplot 1.2.0-9002
+# dv.swimmerplot 1.3.0
 
 - Updated module to return dataset names for dv.manager filters
-
-# dv.swimmerplot 1.2.0-9001
-
 - Changed the font of plot to Liberation Sans
 - Adjusted plot height to ensure full-width display
-
-# dv.swimmerplot 1.2.0-9000
-
 - Fixed incorrect sorting direction when subjects are grouped
 
 # dv.swimmerplot 1.2.0
