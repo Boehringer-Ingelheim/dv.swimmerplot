@@ -17,7 +17,7 @@ test_that(
   )
   
   expect_type(mod, "list")
-  expect_equal(names(mod), c("ui", "server", "module_id"))
+  expect_equal(names(mod), c("ui", "server", "module_id", "meta"))
   expect_equal(mod$module_id, "test_id")
   expect_type(mod$ui, "closure")
   expect_type(mod$server, "closure")

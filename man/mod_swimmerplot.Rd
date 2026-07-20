@@ -125,6 +125,7 @@ A list composed of the following elements:
   \item{`ui`}: Shiny UI function.
   \item{`server`}: Shiny server function.
   \item{`module_id`}: Shiny unique identifier.
+  \item{`meta`}: A list with element `dataset_info`.
 }
 }
 \description{

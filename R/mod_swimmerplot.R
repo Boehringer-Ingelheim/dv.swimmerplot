@@ -142,7 +142,7 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
   
   div_content <- shiny::tags$div(
     id = scroll_id,
-    style = "height: 100%; overflow-y: auto;",
+    style = "overflow-y: auto;",
     shiny::tags$div(
       style = "position: sticky; top: 0; z-index: 1000; background: #fff;",
       drop_menu,
@@ -155,12 +155,15 @@ swimmerplot_UI <- function(id, group_by_vars = NULL, sort_by_vars = NULL, jumpin
     ggiraph::girafeOutput(
       outputId = ns(MODULE_IDS$SWIMMER_PLOT),
       width = "100%",
-      height = NULL
+      height = "100%"
     ),
     legend_script
   )
   
-  shiny::tagList(div_content)
+  shiny::tagList(
+    gdtools::liberationsansHtmlDependency(),
+    div_content
+  )
 }
 
 #' Swimmer Plot Module server
@@ -265,6 +268,8 @@ swimmerplot_server <- function(
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      gdtools::register_liberationsans()
+      
       selected_subject <- shiny::reactiveVal(NULL)
       filter_initialized <- shiny::reactiveVal(FALSE)
       
@@ -671,6 +676,7 @@ swimmerplot_server <- function(
 #'   \item{`ui`}: Shiny UI function.
 #'   \item{`server`}: Shiny server function.
 #'   \item{`module_id`}: Shiny unique identifier.
+#'   \item{`meta`}: A list with element `dataset_info`.
 #' }
 #'
 #' @seealso [swimmerplot_UI()], [swimmerplot_server()]
@@ -765,85 +771,88 @@ mod_swimmerplot <- function(
     null.ok = TRUE
   )
   
-  mod <- list(
-    ui = function(mod_id) {
-      swimmerplot_UI(
-        id = mod_id, 
-        group_by_vars = group_by_vars, 
-        sort_by_vars = sort_by_vars,
-        jumping_enabled = !is.null(receiver_id)
+  ui <- function(mod_id) {
+    swimmerplot_UI(
+      id = mod_id,
+      group_by_vars = group_by_vars,
+      sort_by_vars = sort_by_vars,
+      jumping_enabled = !is.null(receiver_id)
+    )
+  }
+
+  server <- function(afmm) {
+    subject_level_dataset <- shiny::reactive(
+      afmm[["filtered_dataset"]]()[[subject_level_dataset_name]]
+    )
+    exposure_dataset <- shiny::reactive(
+      afmm[["filtered_dataset"]]()[[exposure_dataset_name]]
+    )
+
+    response_dataset <- if (is.null(response_dataset_name)) {
+      shiny::reactive(NULL)
+    } else {
+      shiny::reactive(
+        afmm[["filtered_dataset"]]()[[response_dataset_name]]
       )
-    },
-    
-    server = function(afmm) {
-      subject_level_dataset <- shiny::reactive(
-        afmm[["filtered_dataset"]]()[[subject_level_dataset_name]]
-      )
-      exposure_dataset <- shiny::reactive(
-        afmm[["filtered_dataset"]]()[[exposure_dataset_name]]
-      )
-      
-      response_dataset <- if (is.null(response_dataset_name)) {
-        shiny::reactive(NULL)
-      } else {
-        shiny::reactive(
-          afmm[["filtered_dataset"]]()[[response_dataset_name]]
-        )
+    }
+
+    filter_dataset <- shiny::reactive({
+      data <- afmm[["filtered_dataset"]]()
+      if (is.null(filter_data) || is.null(data) || !(filter_data %in% names(data))) {
+        return(NULL)
       }
-      
-      filter_dataset <- shiny::reactive({
-        data <- afmm[["filtered_dataset"]]()
-        if (is.null(filter_data) || is.null(data) || !(filter_data %in% names(data))) {
-          return(NULL)
-        }
-        data[[filter_data]]
-      })
-      
-      filter_on_exposure <- !is.null(filter_data) && identical(filter_data, exposure_dataset_name)
-      filter_on_response <- !is.null(response_dataset_name) && !is.null(filter_data) && 
-        identical(filter_data, response_dataset_name)
-      
-      swimmerplot_server(
-        id = module_id,
-        subject_level_dataset = subject_level_dataset,
-        exposure_dataset = exposure_dataset,
-        response_dataset = response_dataset,      
-        subjid_var = subjid_var,
-        trt_start_day_var = trt_start_day_var,
-        trt_end_day_var = trt_end_day_var,
-        trt_ongoing_var = trt_ongoing_var,
-        trt_tooltip_vars = trt_tooltip_vars,
-        trt_group_var = trt_group_var,
-        trt_legend_label = trt_legend_label,
-        color_palette = color_palette,
-        result_study_day_var = result_study_day_var,
-        result_tooltip_vars = result_tooltip_vars,
-        trt_annotation_vars = trt_annotation_vars,
-        trt_annotation_x = trt_annotation_x,
-        result_cat_var = result_cat_var,
-        result_legend_label = result_legend_label,
-        shape_mapping = shape_mapping,
-        plot_title = plot_title,
-        plot_subtitle = plot_subtitle,
-        plot_x_label = plot_x_label,
-        plot_y_label = plot_y_label,
-        plot_width = plot_width,
-        plot_height = plot_height,
-        sort_by_vars = sort_by_vars,
-        sort_direction = sort_direction,
-        receiver_id = receiver_id,
-        afmm = afmm,
-        filter_dataset = filter_dataset,
-        filter_on_exposure = filter_on_exposure,
-        filter_on_response = filter_on_response,
-        filter_var = filter_var,
-        filter_values = filter_values,
-        filter_default_vals = filter_default_vals
-      )
-    },
-    
-    module_id = module_id
+      data[[filter_data]]
+    })
+
+    filter_on_exposure <- !is.null(filter_data) && identical(filter_data, exposure_dataset_name)
+    filter_on_response <- !is.null(response_dataset_name) && !is.null(filter_data) &&
+      identical(filter_data, response_dataset_name)
+
+    swimmerplot_server(
+      id = module_id,
+      subject_level_dataset = subject_level_dataset,
+      exposure_dataset = exposure_dataset,
+      response_dataset = response_dataset,
+      subjid_var = subjid_var,
+      trt_start_day_var = trt_start_day_var,
+      trt_end_day_var = trt_end_day_var,
+      trt_ongoing_var = trt_ongoing_var,
+      trt_tooltip_vars = trt_tooltip_vars,
+      trt_group_var = trt_group_var,
+      trt_legend_label = trt_legend_label,
+      color_palette = color_palette,
+      result_study_day_var = result_study_day_var,
+      result_tooltip_vars = result_tooltip_vars,
+      trt_annotation_vars = trt_annotation_vars,
+      trt_annotation_x = trt_annotation_x,
+      result_cat_var = result_cat_var,
+      result_legend_label = result_legend_label,
+      shape_mapping = shape_mapping,
+      plot_title = plot_title,
+      plot_subtitle = plot_subtitle,
+      plot_x_label = plot_x_label,
+      plot_y_label = plot_y_label,
+      plot_width = plot_width,
+      plot_height = plot_height,
+      sort_by_vars = sort_by_vars,
+      sort_direction = sort_direction,
+      receiver_id = receiver_id,
+      afmm = afmm,
+      filter_dataset = filter_dataset,
+      filter_on_exposure = filter_on_exposure,
+      filter_on_response = filter_on_response,
+      filter_var = filter_var,
+      filter_values = filter_values,
+      filter_default_vals = filter_default_vals
+    )
+  }
+
+  dataset_names <- c(
+    subject_level_dataset_name,
+    exposure_dataset_name,
+    response_dataset_name
   )
-  
-  mod
+  meta <- list(dataset_info = list(all = dataset_names))
+
+  list(ui = ui, server = server, module_id = module_id, meta = meta)
 }

@@ -190,29 +190,33 @@ swimmerplot <- function(
     }
     
     sorted_subjects <- sorted_data[[subjid_var]]
-    
-    subject_level_dataset[[subjid_var]] <- factor(
-      subject_level_dataset[[subjid_var]], 
-      levels = sorted_subjects
-    )
-    exposure_dataset[[subjid_var]] <- factor(
-      exposure_dataset[[subjid_var]], 
-      levels = sorted_subjects
-    )
-    
-    if (has_response_data) {
-      response_dataset[[subjid_var]] <- factor(
-        response_dataset[[subjid_var]], 
-        levels = sorted_subjects
-      )
-    }
   }
   
   y_limits <- NULL
   if (!is.null(sort_by_vars)) {
     y_limits <- rev(sorted_subjects)
   } else {
-    y_limits <- rev(unique(subject_level_dataset[[subjid_var]]))
+    all_subjects <- sort(unique(as.character(subject_level_dataset[[subjid_var]])))
+    if (sort_direction == "asc") {
+      y_limits <- rev(all_subjects)
+    } else {
+      y_limits <- all_subjects
+    }
+  }
+  
+  subject_level_dataset[[subjid_var]] <- factor(
+    subject_level_dataset[[subjid_var]],
+    levels = y_limits
+  )
+  exposure_dataset[[subjid_var]] <- factor(
+    exposure_dataset[[subjid_var]],
+    levels = y_limits
+  )
+  if (has_response_data) {
+    response_dataset[[subjid_var]] <- factor(
+      response_dataset[[subjid_var]],
+      levels = y_limits
+    )
   }
   
   exposure_dataset$tooltip_trt <- generate_tooltip(exposure_dataset, trt_tooltip_vars)
@@ -376,12 +380,12 @@ swimmerplot <- function(
       color = ggplot2::guide_legend(order = 1),
       shape = ggplot2::guide_legend(order = 2)
     ) +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_minimal(base_family = "Liberation Sans", base_size = 9) +    
     ggplot2::theme(legend.position = "top", legend.box = "vertical")
   
-  if (is.null(group_by_vars)) {
-    plot_obj <- plot_obj + ggplot2::scale_y_discrete(limits = y_limits)
-  }
+  plot_obj <- plot_obj + ggplot2::scale_y_discrete(
+    limits = function(x) y_limits[y_limits %in% x]
+  )
   
   if (!is.null(group_by_vars)) {
     facet_formula <- stats::as.formula(
