@@ -1,8 +1,8 @@
 # Quality Control
 
-### ✅ dv.swimmerplot 1.2.0
+### ✅ dv.swimmerplot 1.3.0
 
-Date: 2026-Mar-17 11:10:14
+Date: 2026-Jul-20 04:24:07
 
 This document provides the Quality Control (QC) report for the R package
 to confirm that it fulfills the criteria required for a “released”
@@ -59,7 +59,7 @@ test execution.
     #>  collate  en_US.UTF-8
     #>  ctype    en_US.UTF-8
     #>  tz       Etc/UTC
-    #>  date     2026-03-17
+    #>  date     2026-07-20
     #>  pandoc   3.9 @ /usr/bin/ (via rmarkdown)
     #>  quarto   1.8.27 @ /usr/local/bin/quarto
     #> 
@@ -104,7 +104,7 @@ test execution.
     #>  xfun          0.54    2025-10-30 [2] RSPM
     #>  yaml          2.3.11  2025-11-28 [2] RSPM
     #> 
-    #>  [1] /tmp/Rtmpldudqu/temp_libpath1c74117a3bb
+    #>  [1] /tmp/RtmpYCSMWZ/temp_libpath20f2a93b94c
     #>  [2] /usr/local/lib/R/site-library
     #>  [3] /usr/local/lib/R/library
     #> 

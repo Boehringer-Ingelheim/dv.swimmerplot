@@ -4,6 +4,8 @@
 
 - [Communication with DaVinci
   modules](https://boehringer-ingelheim.github.io/dv.swimmerplot/articles/communication.md):
+- [Module
+  Customization](https://boehringer-ingelheim.github.io/dv.swimmerplot/articles/customization.md):
 - [Swimmer Plot
   Module](https://boehringer-ingelheim.github.io/dv.swimmerplot/articles/dv-swimmerplot.md):
 - [Quality

@@ -230,6 +230,8 @@ A list composed of the following elements:
 
 - \`module_id\`: Shiny unique identifier.
 
+- \`meta\`: A list with element \`dataset_info\`.
+
 ## See also
 
 \[swimmerplot_UI()\], \[swimmerplot_server()\]
