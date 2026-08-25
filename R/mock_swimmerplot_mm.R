@@ -96,7 +96,7 @@ mock_swimmerplot_mm <- function() {
     data = list("SDTM Datasets" = sdtm_datasets),
     module_list = module_list,
     title = "Swimmer Plot Example",
-    filter_data = "dm",
+    filter_dataset_name = "dm",
     filter_key = "USUBJID"
   )
 }

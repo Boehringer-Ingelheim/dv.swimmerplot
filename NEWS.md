@@ -1,3 +1,7 @@
+# dv.swimmerplot 1.3.0-9000
+
+- [NOT USER-FACING/REMOVE BEFORE PR TO MAIN] Address dv.manager deprecation warning messages
+
 # dv.swimmerplot 1.3.0
 
 - Updated module to return dataset names for dv.manager filters

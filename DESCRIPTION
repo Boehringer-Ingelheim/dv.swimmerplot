@@ -1,6 +1,6 @@
 Package: dv.swimmerplot
 Title: DaVinci Swimmer Plot Module
-Version: 1.3.0
+Version: 1.3.0-9000
 Authors@R: c(
       person(given = "Ming",
              family = "Yang",
@@ -36,7 +36,7 @@ Imports:
     shiny,
     shinyWidgets
 Suggests:
-    dv.manager,
+    dv.manager (>= 3.1.0),
     jsonlite,
     knitr,
     pharmaversesdtm,
