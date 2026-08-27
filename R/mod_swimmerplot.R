@@ -782,22 +782,22 @@ mod_swimmerplot <- function(
 
   server <- function(afmm) {
     subject_level_dataset <- shiny::reactive(
-      afmm[["filtered_dataset"]]()[[subject_level_dataset_name]]
+      afmm[["filtered_dataset_list"]]()[[subject_level_dataset_name]]
     )
     exposure_dataset <- shiny::reactive(
-      afmm[["filtered_dataset"]]()[[exposure_dataset_name]]
+      afmm[["filtered_dataset_list"]]()[[exposure_dataset_name]]
     )
 
     response_dataset <- if (is.null(response_dataset_name)) {
       shiny::reactive(NULL)
     } else {
       shiny::reactive(
-        afmm[["filtered_dataset"]]()[[response_dataset_name]]
+        afmm[["filtered_dataset_list"]]()[[response_dataset_name]]
       )
     }
 
     filter_dataset <- shiny::reactive({
-      data <- afmm[["filtered_dataset"]]()
+      data <- afmm[["filtered_dataset_list"]]()
       if (is.null(filter_data) || is.null(data) || !(filter_data %in% names(data))) {
         return(NULL)
       }

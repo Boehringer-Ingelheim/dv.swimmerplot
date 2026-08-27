@@ -104,7 +104,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("Study Data" = data_list),
   module_list = module_list,
-  filter_data = "dm",
+  filter_dataset_name = "dm",
   filter_key = "USUBJID"
 )
 ```
