@@ -1,6 +1,6 @@
-# dv.swimmerplot 1.3.0-9000
+# dv.swimmerplot 1.3.1
 
-- [NOT USER-FACING/REMOVE BEFORE PR TO MAIN] Address dv.manager deprecation warning messages
+- Address dv.manager deprecation warning messages
 
 # dv.swimmerplot 1.3.0
 
