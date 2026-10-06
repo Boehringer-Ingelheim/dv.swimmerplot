@@ -177,7 +177,7 @@ dv.manager::run_app(
     "Swimmer Plot with Response" = swimmer_plot_module
   ),
   title = "Swimmer Plot Examples",
-  filter_data = "dm",
+  filter_dataset_name = "dm",
   filter_key = "USUBJID"
 )
 ```

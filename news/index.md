@@ -1,5 +1,9 @@
 # Changelog
 
+## dv.swimmerplot 1.3.1
+
+- Address dv.manager deprecation warning messages
+
 ## dv.swimmerplot 1.3.0
 
 - Updated module to return dataset names for dv.manager filters
